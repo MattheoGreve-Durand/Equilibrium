@@ -1,0 +1,31 @@
+.app-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw; /* Force la largeur écran */
+  overflow: hidden;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%; /* Force la largeur conteneur */
+  padding: 1px;
+  box-sizing: border-box; /* Important pour que le padding ne dépasse pas */
+  background-color: #f3f4f6;
+  gap: 2px;
+}
+
+/* Ces classes sont dans App.jsx, il faut qu'elles soient définies ici ou dans un fichier importé */
+.canvas-area {
+  flex: 1; /* Prend toute la hauteur disponible */
+  min-height: 0; /* Important pour flexbox */
+  width: 100%;   /* Prend toute la largeur */
+  display: flex; /* Pour que l'enfant prenne tout */
+}
+
+.toolbar-area {
+  flex: 0 0 auto;
+  width: 100%;
+}

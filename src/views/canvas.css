@@ -1,0 +1,37 @@
+/* Wrapper qui prend 100% de .canvas-area */
+.konva-wrapper, .three-wrapper {
+    width: 100%;
+    height: 100%;
+    
+    /* --- BORDURE NOIRE VISIBLE --- */
+    border: 2px solid #000000; 
+    
+    border-radius: 4px; /* Coins légèrement arrondis */
+    box-sizing: border-box; /* La bordure est incluse dans la taille */
+    background-color: #fff; /* S'assure que le fond est blanc */
+    display: block;
+    overflow: hidden;
+}
+
+/* Le reste du style pour le ruban (optionnel si vous l'avez déjà) */
+.toolbar-ribbon {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding: 12px;
+    background-color: #ffffff;
+    border: 2px solid #000000; /* Bordure aussi pour la toolbar */
+    border-radius: 8px;
+}
+
+.tool-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 80px;
+    padding: 8px;
+    border: 1px solid #333;
+    background: #eee;
+    cursor: pointer;
+}
