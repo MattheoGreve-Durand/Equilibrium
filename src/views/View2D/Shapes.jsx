@@ -6,34 +6,55 @@ import { Stage, Layer, Line, Circle, Group, Arrow, Text, Arc} from 'react-konva'
  * @param {Object} f - Objet contenant {id, x, y, value}
  * @param {number} index - Index de la force pour la numérotation (F1, F2...)
  */
-export function Force({ f, index }) {
+export function Force({ f, index, isSelected, onSelect, isToolActive }) {
   const isNegative = f.value < 0;
   const height = 50;
+  const rotation = f.angle || 0; 
 
   return (
-    <Group x={f.x} y={f.y}>
+    <Group 
+      x={f.x} y={f.y} rotation={rotation}
+      // GESTION DU CLIC INTELLIGENTE
+      onClick={(e) => {
+        // Si un outil est actif, on laisse le clic passer au Stage (pour que l'outil fonctionne)
+        if (isToolActive) return; 
+        
+        // Sinon, on capture le clic pour la sélection
+        e.cancelBubble = true;
+        if (onSelect) onSelect();
+      }}
+      // CURSEUR INTELLIGENT
+      onMouseEnter={(e) => {
+        if (isToolActive) return; // Pas de changement de curseur si on construit
+        const container = e.target.getStage().container();
+        container.style.cursor = "pointer";
+      }}
+      onMouseLeave={(e) => {
+        if (isToolActive) return;
+        const container = e.target.getStage().container();
+        container.style.cursor = "default";
+      }}
+    >
       <Arrow
         points={[0, -height, 0, 0]}
         pointerLength={10}
         pointerWidth={10}
-        fill="red"
-        stroke="red"
+        fill={isSelected ? "orange" : "red"}
+        stroke={isSelected ? "orange" : "red"}
         strokeWidth={2}
         pointerAtBeginning={isNegative}
         pointerAtEnd={!isNegative}
       />
       <Text
-        // On centre le texte horizontalement (x = -25 avec width = 50)
         x={-35}
-        // Si la flèche pointe vers le haut (isNegative), on met le texte en dessous (y > 0)
-        // Sinon, on le met au-dessus de la queue de la flèche (y < -height)
-        y={isNegative ? 10 : -height - 20}
-        text={`F${f.id} = ${f.value} N`}
-        fill="red"
+        y={isNegative ? 15 : -height - 25}
+        text={`F${index + 1} : ${f.value} N`}
+        fill={isSelected ? "orange" : "red"}
         fontStyle="bold"
         fontSize={12}
         align="center"
         width={70}
+        rotation={-rotation} 
       />
     </Group>
   );
@@ -44,27 +65,63 @@ export function Force({ f, index }) {
  * @param {Object} b - Objet contenant {id, x1, y1, x2, y2}
  * @param {number} index - Index de la poutre pour la numérotation
  */
-export function Beam({ b, index }) {
+export function Beam({ b, index, isSelected, onSelect, isToolActive }) {
   const dx = b.x2 - b.x1;
   const dy = b.y2 - b.y1;
   const lengthPx = Math.sqrt(dx * dx + dy * dy);
-
   const angleRad = Math.atan2(dy, dx);
   const angleDeg = (angleRad * 180) / Math.PI;
-
-
   const lengthM = (lengthPx / 50).toFixed(2);
-
   const midX = (b.x1 + b.x2) / 2;
   const midY = (b.y1 + b.y2) / 2;
-
-  // On ajoute 20px dans la direction perpendiculaire (+90° ou +PI/2)
+  
+  // Logique pour que le texte soit toujours lisible (pas à l'envers)
+  let textAngle = angleDeg;
+  let normalSign = 1;
+  if (angleDeg > 90 || angleDeg < -90) {
+    textAngle += 180;
+    normalSign = -1;
+  }
+  
   const textOffset = 20; 
-  const textX = midX + Math.cos(angleRad + Math.PI / 2) * textOffset;
-  const textY = midY + Math.sin(angleRad + Math.PI / 2) * textOffset;
+  const textX = midX + Math.cos(angleRad + Math.PI / 2) * textOffset * normalSign;
+  const textY = midY + Math.sin(angleRad + Math.PI / 2) * textOffset * normalSign;
 
   return (
-    <Group>
+    <Group
+      onClick={(e) => {
+        // IMPORTANT : Si un outil est actif, on NE FAIT RIEN ici.
+        // On ne met PAS e.cancelBubble = true, pour que le clic remonte au Stage.
+        // Cela permet à forceTool.js de recevoir le clic et de calculer la distance.
+        if (isToolActive) return; 
+
+        e.cancelBubble = true; 
+        if (onSelect) onSelect();
+      }}
+      
+      onMouseEnter={(e) => {
+        if (isToolActive) return;
+        const container = e.target.getStage().container();
+        container.style.cursor = "pointer";
+      }}
+      onMouseLeave={(e) => {
+        if (isToolActive) return;
+        const container = e.target.getStage().container();
+        container.style.cursor = "default"; // Si un outil est actif, le Stage remettra "crosshair"
+      }}
+    >
+      {/* HIGHLIGHT ORANGE (Seulement si sélectionné) */}
+      {isSelected && (
+        <Line
+          points={[b.x1, b.y1, b.x2, b.y2]}
+          stroke="orange"
+          strokeWidth={8}
+          opacity={0.8}
+          lineCap="round"
+        />
+      )}
+
+      {/* La Poutre Normale */}
       <Line
         points={[b.x1, b.y1, b.x2, b.y2]}
         stroke="#1e293b"
@@ -76,14 +133,14 @@ export function Beam({ b, index }) {
         x={textX}
         y={textY}
         text={`${lengthM} m`}
-        rotation={angleDeg}
-        offsetX={50} // Moitié de la largeur (width=100)
-        offsetY={6}  // Moitié de la hauteur de police approx
+        rotation={textAngle}
+        offsetX={50}
+        offsetY={6}
         width={100}
         align="center"
-        fill="#64748b"
+        fill={isSelected ? "orange" : "#64748b"}
         fontSize={12}
-        fontStyle="italic"
+        fontStyle={isSelected ? "bold italic" : "italic"}
       />
     </Group>
   );

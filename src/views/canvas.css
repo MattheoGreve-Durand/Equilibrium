@@ -30,8 +30,94 @@
     align-items: center;
     justify-content: center;
     min-width: 80px;
-    padding: 8px;
+    padding: 4px;
     border: 1px solid #333;
     background: #eee;
     cursor: pointer;
+}
+
+.selection-menu-container {
+    position: absolute;
+    top: 60px;
+    right: 10px;
+    width: 240px;
+    background-color: white;
+    border: 2px solid orange;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    font-family: sans-serif;
+    font-size: 13px;
+    color: #333;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.selection-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+.selection-menu-close-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    color: #999;
+}
+
+.selection-menu-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.selection-menu-label {
+    display: flex;
+    flex-direction: column;
+    font-weight: 500;
+    font-size: 12px;
+}
+
+.selection-menu-input {
+    padding: 4px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-top: 2px;
+}
+
+.selection-menu-footer {
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+    margin-top: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.selection-menu-delete-btn {
+    background-color: #fee2e2;
+    color: #ef4444;
+    border: 1px solid #fecaca;
+    border-radius: 4px;
+    padding: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.selection-menu-delete-btn:hover {
+    background-color: #fecaca;
+}
+
+.selection-menu-id-text {
+    font-size: 10px;
+    color: #aaa;
+    text-align: center;
 }

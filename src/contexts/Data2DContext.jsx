@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react'
+import { update } from 'three/examples/jsm/libs/tween.module.js'
 
 const Data2DContext = createContext()
 
@@ -25,10 +26,34 @@ export function Data2DProvider({ children }) {
   const addPinned = (s) => setPinned((p) => [...p, { id: Date.now(), ...s }])
   const addRolled = (s) => setRolled((r) => [...r, { id: Date.now(), ...s }])
 
+  const addItem = (setFunc, item) => setFunc(prev => [...prev, { id: Date.now(), ...item }])
+  const updateItem = (setFunc, id, props) => setFunc(prev => prev.map(x => x.id === id ? { ...x, ...props } : x))
+  const deleteItem = (setFunc, id) => setFunc(prev => prev.filter(x => x.id !== id))
+
+  const updateElement = (type, id, newProps) => {
+    switch (type) {
+      case 'BEAM': updateItem(setBeams, id, newProps); break;
+      case 'FORCE': updateItem(setForces, id, newProps); break;
+      // Ajoutez ici les futurs cas (MOMENT, LOAD, SUPPORT...)
+      default: console.warn(`Type non supporté : ${type}`);
+    }
+  }
+
+  const deleteElement = (type, id) => {
+    switch (type) {
+      case 'BEAM': deleteItem(setBeams, id); break;
+      case 'FORCE': deleteItem(setForces, id); break;
+      // Ajoutez ici les futurs cas
+      default: console.warn(`Type non supporté : ${type}`);
+    }
+  }
+
   const services = {
     activeTool, setActiveTool, // <-- Export de l'état de l'outil
     beams, forces, loads, moments, fixed, pinned, rolled,
-    addBeam, addForce, addLoad, addMoment, addFixed, addPinned, addRolled
+    addBeam, addForce, addLoad, addMoment, addFixed, addPinned, addRolled,
+    updateElement,
+    deleteElement
   }
 
   return (
