@@ -170,7 +170,7 @@ export function DistributedLoad({ l, index }) {
       <Text
         x={textX}
         y={textY}
-        text={`${label}= ${l.value} N/m`}
+        text={`${label}= ${l.value} N.m`}
         rotation={(angle * 180) / Math.PI}
         // C'est ici la clé : on définit le pivot au centre du bloc de texte
         offsetX={40} // Moitié de la largeur (width=80)
@@ -245,7 +245,7 @@ export function Moment({ m, index}) {
         y={-radius - 20}
         width={80}
         align="center"
-        text={`M${index+1} = ${m.value} Nm`}
+        text={`M${index+1} = ${m.value} N.m`}
         fill="purple"
         fontStyle="bold"
         fontSize={12}
@@ -256,30 +256,31 @@ export function Moment({ m, index}) {
 
 /**
  * Composant Encastrement (Fixed Support).
- * Représenté par une ligne hachurée perpendiculaire à l'angle donné.
- * @param {Object} s - {id, x, y, angle} (angle en degrés)
+ * @param {Object} s - {id, x, y, angle}
  */
 export function FixedSupport({ s, index }) {
-  const height = 30; // Hauteur de la représentation du mur
-  const width = 10;  // Largeur des hachures
+  const height = 30;
+  const width = 10;
   const label = `E${index + 1}`;
+  
+  // CORRECTION CRITIQUE : Si s.angle n'existe pas, on force 0.
+  // Cela empêche 'rotation' de valoir NaN et de casser le rendu.
+  const angle = s.angle || 0;
 
-  // Génération des hachures
   const hatches = [];
   for (let i = -height / 2; i <= height / 2; i += 5) {
     hatches.push(
       <Line
         key={`hatch-${i}`}
-        points={[-width, i + 5, 0, i]} // Diagonales vers la gauche
-        stroke="#334155" // Slate 700
+        points={[-width, i + 5, 0, i]}
+        stroke="#334155"
         strokeWidth={1}
       />
     );
   }
 
   return (
-    <Group x={s.x} y={s.y} rotation={s.angle}>
-      {/* Ligne principale (le mur) */}
+    <Group x={s.x} y={s.y} rotation={angle}>
       <Line
         points={[0, -height / 2, 0, height / 2]}
         stroke="#334155"
@@ -287,21 +288,23 @@ export function FixedSupport({ s, index }) {
         lineCap="round"
       />
       
-      {/* Les hachures */}
       {hatches}
-
-      {/* Point de contact */}
+      
       <Circle radius={3} fill="#334155" />
 
-      {/* Libellé */}
       <Text
-        x={-25}
-        y={-25}
+        x={0}
+        y={-height / 2 - 20}
         text={label}
         fill="#334155"
         fontSize={12}
         fontStyle="bold"
-        rotation={-s.angle} // Pour que le texte reste droit
+        
+        rotation={-angle}
+        
+        align="center"
+        width={40}
+        offsetX={20}
       />
     </Group>
   );

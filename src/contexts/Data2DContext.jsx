@@ -3,47 +3,33 @@ import React, { createContext, useContext, useState } from 'react'
 const Data2DContext = createContext()
 
 export function Data2DProvider({ children }) {
-  // Minimal example data structure for beams and forces
-  const [beams, setBeams] = useState([
-    { id: 1, x1: 10, y1: 100, x2: 300, y2: 100, length: 100},
-  ])
+  // --- ÉTAT DES OUTILS ---
+  // null = aucun outil, 'BEAM' = création poutre, 'FORCE' = création force...
+  const [activeTool, setActiveTool] = useState(null) 
 
-  const [forces, setForces] = useState([
-    { id: 2, x: 50, y: 80, value: 10 },
-  ])
+  // --- DONNÉES EXISTANTES ---
+  const [beams, setBeams] = useState([])
+  const [forces, setForces] = useState([])
+  const [loads, setLoad] = useState([])
+  const [moments, setMoment] = useState([])
+  const [fixed, setFixed] = useState([])
+  const [pinned, setPinned] = useState([])
+  const [rolled, setRolled] = useState([])
 
-  const [loads, setLoad] = useState([
-    {id: 3, x1: 300, x2: 400, y1: 300, y2: 200, value: 200}
-  ])
-
-  const [moments, setMoment] = useState([
-    {id: 3, x: 100, y: 200, value: 200, direction: true}
-  ])
-
-  const [fixed, setFixed] = useState([
-    {id: 4, x: 500, y: 400}
-  ])
-
-  const [pinned, setPinned] = useState([
-    {id: 5, x: 700, y: 200}
-  ])
-
-  const [rolled, setRolled] = useState([
-    {id: 6, x: 900, y: 200}
-  ])
-
-
-
-
+  // Ajout avec timestamp pour ID unique
   const addBeam = (beam) => setBeams((b) => [...b, { id: Date.now(), ...beam }])
   const addForce = (force) => setForces((f) => [...f, { id: Date.now(), ...force }])
   const addLoad = (load) => setLoad((l) => [...l, { id: Date.now(), ...load }])
   const addMoment = (moment) => setMoment((m) => [...m, { id: Date.now(), ...moment }])
-  const addFixed = (fixed) => setFixed((f) => [...f, { id: Date.now(), ...fixed }])
-  const addPinned = (pinned) => setPinned((p) => [...p, { id: Date.now(), ...pinned }])
-  const addRolled = (rolled) => setRolled((r) => [...r, { id: Date.now(), ...rolled }])
+  const addFixed = (s) => setFixed((f) => [...f, { id: Date.now(), ...s }])
+  const addPinned = (s) => setPinned((p) => [...p, { id: Date.now(), ...s }])
+  const addRolled = (s) => setRolled((r) => [...r, { id: Date.now(), ...s }])
 
-  const services = { beams, forces, loads, moments, fixed, pinned, rolled, addBeam, addForce, addLoad, addMoment, addFixed, addPinned, addRolled}
+  const services = {
+    activeTool, setActiveTool, // <-- Export de l'état de l'outil
+    beams, forces, loads, moments, fixed, pinned, rolled,
+    addBeam, addForce, addLoad, addMoment, addFixed, addPinned, addRolled
+  }
 
   return (
     <Data2DContext.Provider value={services}>
@@ -53,9 +39,7 @@ export function Data2DProvider({ children }) {
 }
 
 export function useData2D() {
-  const ctx = useContext(Data2DContext)
-  if (!ctx) throw new Error('useData2D must be used within Data2DProvider')
-  return ctx
+  return useContext(Data2DContext)
 }
 
 export default Data2DContext
