@@ -1,0 +1,177 @@
+[
+    {
+        "version": "2D",
+        "E": 200000,
+        "G": 100000,
+        "V": 0.3,
+        "body": [
+            {
+                "id": 1,
+                "type": "poutre",
+                "coords": [
+                    [
+                        23,
+                        1
+                    ],
+                    [
+                        45,
+                        50
+                    ]
+                ],
+                "form": "rectangulaire",
+                "longueur": 20,
+                "largeur": 10,
+                "hauteur": 40,
+                "petit_hauteur": 2,
+                "rayon": 16,
+                "epaisseur": 0.1,
+                "child": [
+                    {
+                        "id": 1,
+                        "type": "force",
+                        "angle": 90,
+                        "valeur": 500,
+                        "coords": [32, 1]
+                    },
+                    {
+                        "id": 1,
+                        "type": "moment",
+                        "valeur": 500,
+                        "coords":[43, 12],
+                        "sens": true
+                    },
+                    {
+                        "id": 1,
+                        "type": "charge-repartie",
+                        "valeur": 500,
+                        "coords": [
+                            [54, 2],
+                            [65, 1]
+                        ]
+                    },
+                    {
+                        "id": 1,
+                        "type": "encastrement",
+                        "coords": [54, 2]
+
+                    },
+                    {
+                        "id": 1,
+                        "type": "rouleau",
+                        "coords": [54, 2]
+                       
+                    },
+                    {
+                        "id": 1,
+                        "type": "appuie",
+                        "coords": [54, 2]
+                    },
+                    {
+                        "id": 1,
+                        "type": "jauge",
+                        "coords": [45, 13],
+                        "angle": 10
+                    },
+                    {
+                        "id": 1,
+                        "type": "poutre",
+                        "coords": [
+                            [
+                                23,
+                                1
+                            ],
+                            [
+                                45,
+                                50
+                            ]
+                        ],
+                        "form": "rectangulaire",
+                        "longueur": 20,
+                        "largeur": 10,
+                        "hauteur": 40,
+                        "petit_hauteur": 2,
+                        "rayon": 16,
+                        "epaisseur": 0.1,
+                        "child":[
+                            {
+                                "id": 1,
+                                "type": "moment",
+                                "valeur": 500,
+                                "coords":[43, 12],
+                                "sens": true
+                            },
+                            {
+                                "id": 1,
+                                "type": "jauge",
+                                "coords": [45, 13],
+                                "angle": 10
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "id": "int",
+        "type": ["force", "poutre", "moment", "charge-repartie", "encastrement", "rouleau", "appuie", "jauge"],
+        "coords": [["int", "int"], ["int", "int"]],
+        "coords": ["int","int"],
+        "form": ["rectangulaire", "circulaire", "profileI", "circulaire-vide", "profileT"],
+        "longeur": "float",
+        "largeur": "float",
+        "hauteur": "float",
+        "petit_hauteur": "float",
+        "rayon": "float",
+        "epaisseur": "float",
+        "angle": "float PAR RAPPORT A SON PARENT",
+        "distance": "float",
+        "sens": "bool, true si horaire, false si anti-horaire",
+        "angle-jauge": "float ,valeur entrez par utilisateur",
+        "plan": ["xy", "yz", "xz"]
+    },
+    {
+        "version": "3D",
+        "E": 200000,
+        "G": 100000,
+        "V": 0.3,
+        "body":[
+            {
+                "id": 1,
+                "type": "poutre",
+                "coords": [
+                    [
+                        23,
+                        1,
+                        23
+                    ],
+                    [
+                        45,
+                        50,
+                        234
+                    ]
+                ],
+                "form": "rectangulaire",
+                "longueur": 20,
+                "largeur": 10,
+                "hauteur": 40,
+                "petit_hauteur": 2,
+                "rayon": 16,
+                "epaisseur": 0.1,
+                "child": [
+                    {
+                        "id": 1,
+                        "type": "force",
+                        "plan": "xy",
+                        "angle": 90,
+                        "valeur": 500,
+                        "coords": [32, 1, 231]
+                    },
+                    {
+
+                    }
+                ]
+            }
+        ]
+    }
+]
