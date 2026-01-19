@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Stage, Layer, Circle } from 'react-konva';
+import { Group, Stage, Layer, Line, Text, Circle } from 'react-konva';
 import { useData2D } from '../../contexts/Data2DContext';
 import { 
   Beam, 
@@ -15,7 +15,8 @@ import {
   Grid, 
   Gizmo, 
   InfoPanel, 
-  ToolStatusPanel 
+  ToolStatusPanel,
+  ReferenceLines
 } from './Background.jsx';
 import SelectionMenu from './SelectionMenu.jsx';
 import { handleToolClick, getToolHelp } from './tools/indexTool.js'; 
@@ -213,9 +214,33 @@ export default function Canvas2D() {
               isToolActive={isToolActive}
             />
           ))}
-          {fixed.map((s, i) => <FixedSupport key={s.id} s={s} index={i} />)}
-          {rolled.map((s, i) => <RollerSupport key={s.id} s={s} index={i} />)}
-          {pinned.map((s, i) => <PinnedSupport key={s.id} s={s} index={i} />)}
+
+          {fixed.map((s, i) => (
+            <FixedSupport 
+              key={s.id} s={s} index={i}
+              isSelected={selection?.id === s.id && selection?.type === 'FIXED'}
+              onSelect={() => handleObjectSelect(s.id, 'FIXED')}
+              isToolActive={isToolActive}
+            />
+          ))}
+
+          {rolled.map((s, i) => (
+            <RollerSupport 
+              key={s.id} s={s} index={i} 
+              isSelected={selection?.id === s.id && selection?.type === 'ROLLER'}
+              onSelect={() => handleObjectSelect(s.id, 'ROLLER')}
+              isToolActive={isToolActive}
+            />
+          ))}
+
+          {pinned.map((s, i) => (
+            <PinnedSupport 
+              key={s.id} s={s} index={i} 
+              isSelected={selection?.id === s.id && selection?.type === 'PINNED'}
+              onSelect={() => handleObjectSelect(s.id, 'PINNED')}
+              isToolActive={isToolActive}
+            />
+          ))}
 
           {previewSnapPoint && activeTool && (
              <Circle 
@@ -228,7 +253,8 @@ export default function Canvas2D() {
              <Circle x={toolState.p1.x} y={toolState.p1.y} radius={5} fill="orange" />
           )}
 
-          <Gizmo dimensions={dimensions} />
+          <Gizmo dimensions={dimensions}/>
+          <ReferenceLines dimensions={dimensions} />
         </Layer>
       </Stage>
     </div>

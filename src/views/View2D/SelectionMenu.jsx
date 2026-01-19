@@ -20,6 +20,11 @@ export default function SelectionMenu({ selectedObject, parentObject, type, onUp
         return <MomentMenu moment={selectedObject} onUpdate={onUpdate} />;
       case 'LOAD': 
         return <LoadMenu load={selectedObject} onUpdate={onUpdate} />;
+
+      case 'FIXED':
+      case 'PINNED':
+      case 'ROLLER':
+        //return <SupportMenu support={selectedObject} onUpdate={onUpdate} type={type} />;
       default:
         return <div className="selection-menu-id-text">Propriétés non éditables pour cet élément.</div>;
     }
@@ -267,6 +272,45 @@ function LoadMenu({ load, onUpdate }) {
           Négatif = Vers l'extérieur (Succion)
         </small>
       </label>
+    </div>
+  );
+}
+
+function SupportMenu({ support, onUpdate, type }) {
+  const rotation = support.angle || 0;
+
+  const handleRotationChange = (val) => {
+    const r = parseFloat(val);
+    if (isNaN(r)) return;
+    onUpdate({ angle: r });
+  };
+
+  const getLabel = () => {
+    if (type === 'FIXED') return "Encastrement";
+    if (type === 'PINNED') return "Appui Simple";
+    if (type === 'ROLLER') return "Appui Rouleau";
+    return "Appui";
+  }
+
+  return (
+    <div className="selection-menu-grid">
+      <div style={{fontWeight:'bold', marginBottom:5}}>{getLabel()}</div>
+      
+      <label className="selection-menu-label">
+        Rotation (°):
+        <input 
+          type="number" 
+          value={rotation} 
+          onChange={(e) => handleRotationChange(e.target.value)} 
+          className="selection-menu-input"
+        />
+      </label>
+
+      <div style={{display:'flex', gap:5, marginTop:5}}>
+        <button onClick={() => onUpdate({ angle: 0 })} className="action-btn-secondary">0° (Sol)</button>
+        <button onClick={() => onUpdate({ angle: 90 })} className="action-btn-secondary">90° (Mur)</button>
+        <button onClick={() => onUpdate({ angle: -90 })} className="action-btn-secondary">-90°</button>
+      </div>
     </div>
   );
 }

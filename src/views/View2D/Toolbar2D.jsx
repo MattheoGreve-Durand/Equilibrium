@@ -42,15 +42,6 @@ export default function Toolbar2D() {
         {activeTool === 'MOMENT' ? 'Annuler' : 'Moment'}
       </button>
 
-      {/* BOUTON COTATION */}
-      <button 
-        className="tool-btn" 
-        onClick={() => toggleTool('DIMENSION')}
-      >
-        <span className="icon-placeholder"></span>
-        {activeTool === 'DIMENSION' ? 'Annuler' : 'Cotation'}
-      </button>
-
       {/* BOUTON CHARGE REPARTIE */}
       <button 
         className="tool-btn" 
@@ -58,6 +49,46 @@ export default function Toolbar2D() {
       >
         <span className="icon-placeholder"></span>
         {activeTool === 'LOAD' ? 'Annuler' : 'Charge'}
+      </button>
+
+      {/* BOUTON ENCASTREMENT */}
+      <button 
+        className="tool-btn" onClick={() => toggleTool('FIXED')}
+      >
+        <span className="icon-placeholder"></span>
+        {activeTool === 'FIXED' ? 'Annuler' : 'Encast.'}
+      </button>
+
+      {/* BOUTON APPUI SIMPLE */}
+      <button 
+        className="tool-btn" onClick={() => toggleTool('PINNED')}
+      >
+        <span className="icon-placeholder"></span>
+        {activeTool === 'PINNED' ? 'Annuler' : 'Appui S.'}
+      </button>
+
+      {/* BOUTON ROULEAU */}
+      <button 
+        className="tool-btn" onClick={() => toggleTool('ROLLER')}
+      >
+        <span className="icon-placeholder"></span>
+        {activeTool === 'ROLLER' ? 'Annuler' : 'Rouleau'}
+      </button>
+
+      <div style={{ 
+        width: '1px', 
+        backgroundColor: '#cbd5e1', 
+        margin: '0 4px', 
+        alignSelf: 'stretch' 
+      }}></div>
+
+      {/* BOUTON COTATION */}
+      <button 
+        className="tool-btn" 
+        onClick={() => toggleTool('DIMENSION')}
+      >
+        <span className="icon-placeholder"></span>
+        {activeTool === 'DIMENSION' ? 'Annuler' : 'Cotation'}
       </button>
 
     </div>

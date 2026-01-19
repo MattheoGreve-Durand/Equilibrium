@@ -3,6 +3,7 @@ import { forceTool } from './forceTool';
 import { dimensionTool } from './dimensionTool';
 import { momentTool } from './momentTool';
 import { loadTool } from './loadTool';
+import { fixedTool, pinnedTool, rollerTool } from './supportTool';
 
 // Registre des outils disponibles
 const tools = {
@@ -11,6 +12,9 @@ const tools = {
   'MOMENT': momentTool,
   'DIMENSION': dimensionTool,
   'LOAD': loadTool,
+  'FIXED': fixedTool,
+  'PINNED': pinnedTool,
+  'ROLLER': rollerTool,
 };
 
 /**

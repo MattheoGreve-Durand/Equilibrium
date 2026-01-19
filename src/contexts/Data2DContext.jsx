@@ -39,6 +39,9 @@ export function Data2DProvider({ children }) {
       case 'MEASUREMENT': updateItem(setMeasurements, id, newProps); break;
       case 'MOMENT': updateItem(setMoment, id, newProps); break;
       case 'LOAD': updateItem(setLoad, id, newProps); break;
+      case 'FIXED': updateItem(setFixed, id, newProps); break;
+      case 'PINNED': updateItem(setPinned, id, newProps); break;
+      case 'ROLLER': updateItem(setRolled, id, newProps); break;
       // Ajoutez ici les futurs cas (MOMENT, LOAD, SUPPORT...)
       default: console.warn(`Type non supporté : ${type}`);
     }
@@ -51,6 +54,9 @@ export function Data2DProvider({ children }) {
       case 'MEASUREMENT': deleteItem(setMeasurements, id); break;
       case 'MOMENT': deleteItem(setMoment, id); break;
       case 'LOAD': deleteItem(setLoad, id); break;
+      case 'FIXED': deleteItem(setFixed, id); break;
+      case 'PINNED': deleteItem(setPinned, id); break;
+      case 'ROLLER': deleteItem(setRolled, id); break;
       // Ajoutez ici les futurs cas
       default: console.warn(`Type non supporté : ${type}`);
     }

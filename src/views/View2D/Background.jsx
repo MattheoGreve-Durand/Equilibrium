@@ -33,7 +33,7 @@ export function Gizmo({ dimensions, gridSize = 50 }) {
   if (dimensions.height <= 0) return null;
 
   return (
-    <Group x={originX} y={originY}>
+    <Group x={originX} y={originY} draggable>
       <Arrow points={[0, 0, axisLength, 0]} stroke="red" strokeWidth={2} pointerLength={6} pointerWidth={6} />
       <Text x={axisLength + 5} y={-5} text="X" fill="red" fontStyle="bold" />
 
@@ -41,14 +41,25 @@ export function Gizmo({ dimensions, gridSize = 50 }) {
       <Text x={-5} y={-axisLength - 15} text="Y" fill="green" fontStyle="bold" />
       
       <Circle radius={3} fill="#1f2937" />
+    </Group>
+  );
+}
 
-      <Group x={gridSize*2}>
+export function ReferenceLines({ dimensions, gridSize = 50 }) {
+  const axisLength = 50;
+  const margin = 60;
+
+  const originX = Math.round(margin / gridSize) * gridSize;
+  const originY = Math.floor((dimensions.height - margin) / gridSize) * gridSize;
+
+  if (dimensions.height <= 0) return null;
+  return (
+    <Group x={originX + gridSize*2} y={originY}>
         <Line points={[0, 0, gridSize, 0]} stroke="#64748b" strokeWidth={2} />
         <Line points={[0, -3, 0, 3]} stroke="#64748b" strokeWidth={2} />
         <Line points={[gridSize, -3, gridSize, 3]} stroke="#64748b" strokeWidth={2} />
         <Text x={0} y={8} width={gridSize} align="center" text="1 m" fill="#64748b" fontSize={10} fontStyle="italic" />
       </Group>
-    </Group>
   );
 }
 

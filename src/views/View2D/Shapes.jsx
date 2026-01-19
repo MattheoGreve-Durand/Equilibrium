@@ -339,53 +339,36 @@ export function Moment({ m, index, isSelected, onSelect, isToolActive }) {
  * Composant Encastrement (Fixed Support).
  * @param {Object} s - {id, x, y, angle}
  */
-export function FixedSupport({ s, index }) {
+export function FixedSupport({ s, index, isSelected, onSelect, isToolActive }) {
   const height = 30;
   const width = 10;
   const label = `E${index + 1}`;
-  
-  // CORRECTION CRITIQUE : Si s.angle n'existe pas, on force 0.
-  // Cela empêche 'rotation' de valoir NaN et de casser le rendu.
   const angle = s.angle || 0;
+  const color = isSelected ? "orange" : "#334155"; // Gestion couleur
 
   const hatches = [];
   for (let i = -height / 2; i <= height / 2; i += 5) {
     hatches.push(
-      <Line
-        key={`hatch-${i}`}
-        points={[-width, i + 5, 0, i]}
-        stroke="#334155"
-        strokeWidth={1}
-      />
+      <Line key={`hatch-${i}`} points={[-width, i + 5, 0, i]} stroke={color} strokeWidth={1} />
     );
   }
 
   return (
-    <Group x={s.x} y={s.y} rotation={angle}>
-      <Line
-        points={[0, -height / 2, 0, height / 2]}
-        stroke="#334155"
-        strokeWidth={3}
-        lineCap="round"
-      />
-      
+    <Group 
+      x={s.x} y={s.y} rotation={angle}
+      onClick={(e) => {
+        if (isToolActive) return;
+        e.cancelBubble = true;
+        if (onSelect) onSelect();
+      }}
+    >
+      <Line points={[0, -height / 2, 0, height / 2]} stroke={color} strokeWidth={3} lineCap="round" />
       {hatches}
-      
-      <Circle radius={3} fill="#334155" />
-
+      <Circle radius={3} fill={color} />
       <Text
-        x={0}
-        y={-height / 2 - 20}
-        text={label}
-        fill="#334155"
-        fontSize={12}
-        fontStyle="bold"
-        
-        rotation={-angle}
-        
-        align="center"
-        width={40}
-        offsetX={20}
+        x={0} y={-height / 2 - 20}
+        text={label} fill={color} fontSize={12} fontStyle="bold"
+        rotation={-angle} align="center" width={40} offsetX={20}
       />
     </Group>
   );
@@ -396,56 +379,27 @@ export function FixedSupport({ s, index }) {
  * Triangle sur deux roues. La pointe (x,y) est le contact.
  * @param {Object} s - {id, x, y}
  */
-export function RollerSupport({ s, index }) {
-  const size = 15; // Taille du triangle
+export function RollerSupport({ s, index, isSelected, onSelect, isToolActive }) {
+  const size = 15; 
   const label = `R${index + 1}`;
+  const angle = s.angle || 0; // Ajout rotation
+  const color = isSelected ? "orange" : "#334155";
+  const bg = isSelected ? "#fff7ed" : "white"; // Fond légèrement teinté si sélectionné
 
   return (
-    <Group x={s.x} y={s.y}>
-      {/* Triangle (Pointe en 0,0) */}
-      <Line
-        points={[-10, size, 10, size, 0, 0]}
-        closed
-        stroke="#334155"
-        strokeWidth={2}
-        fill="white" // Fond blanc pour cacher la grille derrière
-      />
-
-      {/* Roue Gauche */}
-      <Circle
-        x={-6}
-        y={size + 4} // Juste en dessous de la base du triangle
-        radius={4}
-        stroke="#334155"
-        strokeWidth={2}
-        fill="white"
-      />
-
-      {/* Roue Droite */}
-      <Circle
-        x={6}
-        y={size + 4}
-        radius={4}
-        stroke="#334155"
-        strokeWidth={2}
-        fill="white"
-      />
-
-      {/* Ligne de sol (optionnelle, pour le style) */}
-      <Line
-        points={[-15, size + 9, 15, size + 9]}
-        stroke="#94a3b8"
-        strokeWidth={2}
-      />
-
-      <Text
-        x={15}
-        y={0}
-        text={label}
-        fill="#334155"
-        fontSize={12}
-        fontStyle="bold"
-      />
+    <Group 
+      x={s.x} y={s.y} rotation={angle}
+      onClick={(e) => {
+        if (isToolActive) return;
+        e.cancelBubble = true;
+        if (onSelect) onSelect();
+      }}
+    >
+      <Line points={[-10, size, 10, size, 0, 0]} closed stroke={color} strokeWidth={2} fill={bg} />
+      <Circle x={-6} y={size + 4} radius={4} stroke={color} strokeWidth={2} fill={bg} />
+      <Circle x={6} y={size + 4} radius={4} stroke={color} strokeWidth={2} fill={bg} />
+      <Line points={[-15, size + 9, 15, size + 9]} stroke={isSelected ? "orange" : "#94a3b8"} strokeWidth={2} />
+      <Text x={15} y={0} text={label} fill={color} fontSize={12} fontStyle="bold" rotation={-angle} />
     </Group>
   );
 }
@@ -455,28 +409,26 @@ export function RollerSupport({ s, index }) {
  * Triangle simple posé au sol. La pointe (x,y) est le contact.
  * @param {Object} s - {id, x, y}
  */
-export function PinnedSupport({ s, index }) {
+export function PinnedSupport({ s, index, isSelected, onSelect, isToolActive }) {
   const size = 15;
   const label = `A${index + 1}`;
+  const angle = s.angle || 0; // Ajout rotation
+  const color = isSelected ? "orange" : "#334155";
+  const bg = isSelected ? "#fff7ed" : "white";
 
   return (
-    <Group x={s.x} y={s.y}>
-      {/* Triangle (Pointe en 0,0) */}
-      <Line
-        points={[-10, size, 10, size, 0, 0]}
-        closed
-        stroke="#334155"
-        strokeWidth={2}
-        fill="white"
-      />
-
-      {/* Symbole du sol fixe (hachures plates sous le triangle) */}
-      <Line
-        points={[-15, size, 15, size]}
-        stroke="#334155"
-        strokeWidth={2}
-      />
-      {/* Petites hachures de sol */}
+    <Group 
+      x={s.x} y={s.y} rotation={angle}
+      onClick={(e) => {
+        if (isToolActive) return;
+        e.cancelBubble = true;
+        if (onSelect) onSelect();
+      }}
+    >
+      <Line points={[-10, size, 10, size, 0, 0]} closed stroke={color} strokeWidth={2} fill={bg} />
+      <Line points={[-15, size, 15, size]} stroke={color} strokeWidth={2} />
+      
+      {/* Hachures sol */}
       <Group y={size}>
         <Line points={[-12, 0, -15, 5]} stroke="#94a3b8" strokeWidth={1} />
         <Line points={[-5, 0, -8, 5]} stroke="#94a3b8" strokeWidth={1} />
@@ -484,14 +436,7 @@ export function PinnedSupport({ s, index }) {
         <Line points={[9, 0, 6, 5]} stroke="#94a3b8" strokeWidth={1} />
       </Group>
 
-      <Text
-        x={15}
-        y={0}
-        text={label}
-        fill="#334155"
-        fontSize={12}
-        fontStyle="bold"
-      />
+      <Text x={15} y={0} text={label} fill={color} fontSize={12} fontStyle="bold" rotation={-angle} />
     </Group>
   );
 }
