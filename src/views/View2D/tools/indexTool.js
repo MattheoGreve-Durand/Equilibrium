@@ -1,11 +1,16 @@
 import { beamTool } from './beamTool';
 import { forceTool } from './forceTool';
+import { dimensionTool } from './dimensionTool';
+import { momentTool } from './momentTool';
+import { loadTool } from './loadTool';
 
 // Registre des outils disponibles
 const tools = {
   'BEAM': beamTool,
   'FORCE': forceTool, 
-  // 'MOMENT': momentTool,
+  'MOMENT': momentTool,
+  'DIMENSION': dimensionTool,
+  'LOAD': loadTool,
 };
 
 /**

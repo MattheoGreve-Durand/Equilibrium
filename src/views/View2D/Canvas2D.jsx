@@ -8,7 +8,8 @@ import {
   Moment, 
   PinnedSupport, 
   RollerSupport, 
-  FixedSupport 
+  FixedSupport,
+  DimensionLine, 
 } from './Shapes.jsx';
 import { 
   Grid, 
@@ -22,7 +23,7 @@ import { handleToolClick, getToolHelp } from './tools/indexTool.js';
 export default function Canvas2D() {
   const dataContext = useData2D();
   const { 
-    beams, forces, loads, moments, pinned, rolled, fixed, 
+    beams, forces, loads, moments, pinned, rolled, fixed, measurements,
     activeTool, updateElement, deleteElement 
   } = dataContext;
   
@@ -40,7 +41,6 @@ export default function Canvas2D() {
 
   const isToolActive = activeTool !== null;
 
-  // --- CORRECTION DU BUG ---
   // Réinitialise l'état temporaire quand l'outil change ou est annulé
   useEffect(() => {
     setToolState({});
@@ -71,6 +71,8 @@ export default function Canvas2D() {
       case 'FIXED': return fixed.find(s => s.id === selection.id);
       case 'PINNED': return pinned.find(s => s.id === selection.id);
       case 'ROLLER': return rolled.find(s => s.id === selection.id);
+      case 'MEASUREMENT': return measurements.find(m => m.id === selection.id);
+      case 'MOMENT': return moments.find(m => m.id === selection.id);
       default: return null;
     }
   };
@@ -125,6 +127,16 @@ export default function Canvas2D() {
     }
   };
 
+  const getParentObject = () => {
+    if (selection?.type === 'FORCE') {
+      const selectedForce = forces.find(f => f.id === selection.id);
+      if (selectedForce && selectedForce.beamId) {
+        return beams.find(b => b.id === selectedForce.beamId);
+      }
+    }
+    return null;
+  };
+
   return (
     <div ref={divRef} className="konva-wrapper" style={{ position: 'relative' }}>
       
@@ -137,6 +149,7 @@ export default function Canvas2D() {
 
       <SelectionMenu 
         selectedObject={getSelectedObject()}
+        parentObject={getParentObject()}
         type={selection?.type}
         onUpdate={(props) => updateElement(selection.type, selection.id, props)}
         onDelete={() => {
@@ -174,8 +187,32 @@ export default function Canvas2D() {
             />
           ))}
 
-          {loads.map((l, index) => <DistributedLoad key={l.id} l={l} index={index} />)}
-          {moments.map((m, index) => <Moment key={m.id} m={m} index={index} />)}
+          {measurements.map((m, index) => (
+            <DimensionLine 
+              key={m.id} d={m} index={index}
+              isSelected={selection?.id === m.id && selection?.type === 'MEASUREMENT'}
+              onSelect={() => handleObjectSelect(m.id, 'MEASUREMENT')}
+              isToolActive={isToolActive}
+            />
+          ))}
+
+          {loads.map((l, index) => (
+            <DistributedLoad 
+              key={l.id} l={l} index={index}
+              isSelected={selection?.id === l.id && selection?.type === 'LOAD'}
+              onSelect={() => handleObjectSelect(l.id, 'LOAD')}
+              isToolActive={isToolActive}
+            />
+          ))}
+
+          {moments.map((m, index) => (
+            <Moment 
+              key={m.id} m={m} index={index}
+              isSelected={selection?.id === m.id && selection?.type === 'MOMENT'}
+              onSelect={() => handleObjectSelect(m.id, 'MOMENT')}
+              isToolActive={isToolActive}
+            />
+          ))}
           {fixed.map((s, i) => <FixedSupport key={s.id} s={s} index={i} />)}
           {rolled.map((s, i) => <RollerSupport key={s.id} s={s} index={i} />)}
           {pinned.map((s, i) => <PinnedSupport key={s.id} s={s} index={i} />)}

@@ -36,18 +36,18 @@ export function Force({ f, index, isSelected, onSelect, isToolActive }) {
       }}
     >
       <Arrow
-        points={[0, -height, 0, 0]}
+        points={isNegative ? [0, 0, 0, -height] : [0, -height, 0, 0]}
         pointerLength={10}
         pointerWidth={10}
         fill={isSelected ? "orange" : "red"}
         stroke={isSelected ? "orange" : "red"}
         strokeWidth={2}
-        pointerAtBeginning={isNegative}
-        pointerAtEnd={!isNegative}
+        pointerAtBeginning={false}
+        pointerAtEnd={true}
       />
       <Text
         x={-35}
-        y={isNegative ? 15 : -height - 25}
+        y={-height - 25}
         text={`F${index + 1} : ${f.value} N`}
         fill={isSelected ? "orange" : "red"}
         fontStyle="bold"
@@ -151,21 +151,19 @@ export function Beam({ b, index, isSelected, onSelect, isToolActive }) {
  * @param {Object} l - Objet contenant {id, x1, y1, x2, y2, value}
  * @param {number} index - Index de la poutre pour la numérotation
  */
-export function DistributedLoad({ l, index }) {
+export function DistributedLoad({ l, index, isSelected, onSelect, isToolActive }) {
   const height = 40;
   const spacing = 20;
-  const isNegative = l.value < 0;
-  const label = `q${index + 1}`;
-  console.log(label);
-
-  // 1. Calcul de l'angle et de la longueur
+  const isNegative = l.value < 0; 
+  const color = isSelected ? "orange" : "blue";
+  
+  // 1. Géométrie
   const dx = l.x2 - l.x1;
   const dy = l.y2 - l.y1;
   const angle = Math.atan2(dy, dx);
   const length = Math.sqrt(dx * dx + dy * dy);
 
-  // 2. Calcul du décalage perpendiculaire pour la barre bleue
-  // La barre est toujours dessinée "au-dessus" (sens normal -90°)
+  // 2. Décalage (Barre au-dessus de la poutre)
   const offsetX = Math.cos(angle - Math.PI / 2) * height;
   const offsetY = Math.sin(angle - Math.PI / 2) * height;
 
@@ -174,69 +172,89 @@ export function DistributedLoad({ l, index }) {
   const topX2 = l.x2 + offsetX;
   const topY2 = l.y2 + offsetY;
 
-  // 3. Calcul des flèches
-  const numArrows = Math.max(1, Math.floor(length / spacing));
+  // 3. Génération des flèches
+  const numArrows = Math.max(2, Math.floor(length / spacing));
   const arrows = [];
+  
   for (let i = 0; i <= numArrows; i++) {
     const t = i / numArrows;
-    const ax1 = l.x1 + t * dx + offsetX;
-    const ay1 = l.y1 + t * dy + offsetY;
-    const ax2 = l.x1 + t * dx;
-    const ay2 = l.y1 + t * dy;
+    
+    // Coordonnées sur la barre du haut
+    const tx = topX1 + t * (topX2 - topX1);
+    const ty = topY1 + t * (topY2 - topY1);
+    
+    // Coordonnées sur la poutre
+    const bx = l.x1 + t * dx;
+    const by = l.y1 + t * dy;
+
+    // CORRECTION ICI : Inversion des points au lieu d'inverser les têtes
+    // Si positif : De la barre (Haut) vers la Poutre (Bas)
+    // Si négatif : De la Poutre (Bas) vers la barre (Haut)
+    const arrowPoints = isNegative 
+      ? [bx, by, tx, ty] 
+      : [tx, ty, bx, by];
 
     arrows.push(
         <Arrow
-          key={`q-arrow-${l.id}-${i}`}
-          points={[ax1, ay1, ax2, ay2]}
-          pointerLength={8}
-          pointerWidth={8}
-          fill="blue"
-          stroke="blue"
+          key={`load-arrow-${i}`}
+          points={arrowPoints}
+          pointerLength={5}
+          pointerWidth={5}
+          fill={color}
+          stroke={color}
           strokeWidth={1}
-          pointerAtBeginning={isNegative}
-          pointerAtEnd={!isNegative}
+          
+          // On garde toujours la flèche à la fin du tracé
+          pointerAtEnd={true}
+          pointerAtBeginning={false}
         />
     );
   }
 
-  // 4. Positionnement du texte
-  // On le place toujours "au-dessus" de la barre bleue (donc à height + marge)
-  const textDist = height + 25; 
-  
-  // Point central de la poutre
-  const midX = (l.x1 + l.x2) / 2;
-  const midY = (l.y1 + l.y2) / 2;
-
-  // Vecteur normal unitaire
-  const normX = Math.cos(angle - Math.PI / 2);
-  const normY = Math.sin(angle - Math.PI / 2);
-
-  // Position finale du centre du texte
-  const textX = midX + normX * textDist;
-  const textY = midY + normY * textDist;
+  // 4. Texte
+  const midX = (topX1 + topX2) / 2;
+  const midY = (topY1 + topY2) / 2;
+  const textOffset = 15;
+  const textX = midX + Math.cos(angle - Math.PI / 2) * textOffset;
+  const textY = midY + Math.sin(angle - Math.PI / 2) * textOffset;
 
   return (
-    <Group>
+    <Group
+      onClick={(e) => {
+        if (isToolActive) return;
+        e.cancelBubble = true;
+        if (onSelect) onSelect();
+      }}
+      onMouseEnter={(e) => {
+        if (isToolActive) return;
+        e.target.getStage().container().style.cursor = "pointer";
+      }}
+      onMouseLeave={(e) => {
+        if (isToolActive) return;
+        e.target.getStage().container().style.cursor = "default";
+      }}
+    >
+      {/* Barre de liaison */}
       <Line
-        points={[topX1, topY1, topX2, topY2]}
-        stroke="blue"
+        points={isNegative ? [topX1, topY1+height, topX2, topY2+height]: [topX1, topY1, topX2, topY2]}
+        stroke={color}
         strokeWidth={2}
       />
+      
       {arrows}
       
       <Text
         x={textX}
         y={textY}
-        text={`${label}= ${l.value} N.m`}
+        text={`q${index+1} = ${l.value} N/m`}
         rotation={(angle * 180) / Math.PI}
-        // C'est ici la clé : on définit le pivot au centre du bloc de texte
-        offsetX={40} // Moitié de la largeur (width=80)
-        offsetY={7}  // Moitié approximative de la hauteur de police
-        width={80}
-        align="center"
-        fill="blue"
+        fill={color}
         fontStyle="bold"
         fontSize={12}
+        align="center"
+        width={100}
+        offsetX={50}
+        offsetY={7}
       />
     </Group>
   );
@@ -248,62 +266,68 @@ export function DistributedLoad({ l, index }) {
  * @param {number} index - Index de la poutre pour la numérotation
  * direction: 1 pour Anti-horaire (CCW), -1 pour Horaire (CW)
  */
-export function Moment({ m, index}) {
+export function Moment({ m, index, isSelected, onSelect, isToolActive }) {
   const radius = 18;
-  const isCCW = m.direction; // Positif = Anti-horaire
+  const isCCW = m.direction === 1; 
+  const color = isSelected ? "orange" : "purple";
 
-  // Angles cibles pour la pointe de la flèche
-  const angleCCW = (5 * Math.PI) / 6; // 150 degrés
-  const angleCW = (7 * Math.PI) / 6;  // 210 degrés
+  const arcAngle = 280;
+
+  const rotation = 130;
+
+  const headAngleDeg = isCCW ? (rotation + arcAngle) : rotation;
+  const headAngleRad = (headAngleDeg * Math.PI) / 180;
+
+  const headX = radius * Math.cos(headAngleRad);
+  const headY = radius * Math.sin(headAngleRad);
+
+  const tangentAngle = isCCW ? headAngleRad + Math.PI / 2 : headAngleRad - Math.PI / 2;
   
-  // Petit décalage pour définir la queue de la flèche
-  const step = 0.2; 
-
-  // On calcule les points : [QUEUE_X, QUEUE_Y, TÊTE_X, TÊTE_Y]
-  // La flèche pointe toujours vers le 2ème point.
-  const arrowPoints = isCCW
-    ? [
-        // Sens CCW : on part d'un angle plus petit pour aller vers 150°
-        radius * Math.cos(angleCCW - step),
-        radius * Math.sin(angleCCW - step),
-        radius * Math.cos(angleCCW),
-        radius * Math.sin(angleCCW),
-      ]
-    : [
-        // Sens CW : on part d'un angle plus grand pour aller vers 210°
-        radius * Math.cos(angleCW + step),
-        radius * Math.sin(angleCW + step),
-        radius * Math.cos(angleCW),
-        radius * Math.sin(angleCW),
-      ];
+  const arrowPoints = [
+    headX - Math.cos(tangentAngle) * 0.1, // Point arrière minuscule pour donner la direction
+    headY - Math.sin(tangentAngle) * 0.1,
+    headX,
+    headY
+  ];
 
   return (
-    <Group x={m.x} y={m.y}>
+    <Group 
+      x={m.x} y={m.y}
+      onClick={(e) => {
+        if (isToolActive) return;
+        e.cancelBubble = true;
+        if (onSelect) onSelect();
+      }}
+    >
+      {/* Point central */}
+      <Circle radius={2} fill={color} />
+
       <Arc
         innerRadius={radius}
         outerRadius={radius}
-        angle={280}
-        stroke="purple"
+        angle={arcAngle}
+        stroke={color}
         strokeWidth={3}
-        rotation={220}
+        rotation={rotation}
+
       />
 
       <Arrow
         points={arrowPoints}
-        stroke="purple"
-        fill="purple"
+        stroke={color}
+        fill={color}
         strokeWidth={3}
-        pointerLength={10}
-        pointerWidth={10}
+        pointerLength={8}
+        pointerWidth={8}
       />
 
       <Text
         x={-40}
-        y={-radius - 20}
+        y={-radius - 25}
         width={80}
         align="center"
-        text={`M${index+1} = ${m.value} N.m`}
-        fill="purple"
+        text={`M${index + 1} : ${m.value} N.m`}
+        fill={color}
         fontStyle="bold"
         fontSize={12}
       />
@@ -468,6 +492,92 @@ export function PinnedSupport({ s, index }) {
         fontSize={12}
         fontStyle="bold"
       />
+    </Group>
+  );
+}
+
+/**
+ * Composant de Cotation (Dimension Line).
+ * Dessine la distance entre (x1,y1) et (x2,y2) avec un décalage.
+ */
+export function DimensionLine({ d, index, isSelected, onSelect, isToolActive }) {
+  const dx = d.x2 - d.x1;
+  const dy = d.y2 - d.y1;
+  const lengthPx = Math.sqrt(dx*dx + dy*dy);
+  const lengthM = (lengthPx / 50).toFixed(2);
+  const angleRad = Math.atan2(dy, dx);
+  const angleDeg = (angleRad * 180) / Math.PI;
+
+  // C'est ici que le menu agit : d.offset contrôle l'éloignement de la cote
+  const offset = d.offset || 50;
+
+  // Vecteur normal pour décaler les points
+  const nx = -Math.sin(angleRad);
+  const ny = Math.cos(angleRad);
+
+  // Position de la flèche (décalée de 'offset')
+  const offX1 = d.x1 + nx * offset;
+  const offY1 = d.y1 + ny * offset;
+  const offX2 = d.x2 + nx * offset;
+  const offY2 = d.y2 + ny * offset;
+
+  // Correction de l'angle du texte pour la lecture
+  let textAngle = angleDeg;
+  if (angleDeg > 90 || angleDeg < -90) textAngle += 180;
+
+  const color = isSelected ? "orange" : "#475569"; 
+
+  return (
+    <Group
+      onClick={(e) => {
+        if (isToolActive) return;
+        e.cancelBubble = true;
+        if (onSelect) onSelect();
+      }}
+    >
+      {/* Ligne pointillée 1 : Va du point d'origine jusqu'à la flèche (+ petit dépassement de 5px) */}
+      <Line
+        points={[d.x1, d.y1, offX1 + nx * 5, offY1 + ny * 5]} 
+        stroke={color}
+        strokeWidth={1}
+        opacity={0.5}
+        dash={[4, 4]} // Effet pointillé
+      />
+
+      {/* Ligne pointillée 2 */}
+      <Line
+        points={[d.x2, d.y2, offX2 + nx * 5, offY2 + ny * 5]}
+        stroke={color}
+        strokeWidth={1}
+        opacity={0.5}
+        dash={[4, 4]}
+      />
+
+      {/* Flèche double */}
+      <Arrow
+        points={[offX1, offY1, offX2, offY2]}
+        stroke={color}
+        fill={color}
+        strokeWidth={1.5}
+        pointerLength={6}
+        pointerWidth={6}
+        pointerAtBeginning={true}
+        pointerAtEnd={true}
+      />
+
+      {/* Texte */}
+      <Group x={(offX1 + offX2) / 2} y={(offY1 + offY2) / 2} rotation={textAngle}>
+        <Text
+          text={`${lengthM} m`}
+          fontSize={12}
+          fill={color}
+          fontStyle="bold"
+          align="center"
+          offsetY={15}
+          offsetX={30}
+          width={60}
+        />
+      </Group>
     </Group>
   );
 }

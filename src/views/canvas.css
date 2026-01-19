@@ -1,26 +1,22 @@
-/* Wrapper qui prend 100% de .canvas-area */
 .konva-wrapper, .three-wrapper {
     width: 100%;
     height: 100%;
-    
-    /* --- BORDURE NOIRE VISIBLE --- */
     border: 2px solid #000000; 
-    
-    border-radius: 4px; /* Coins légèrement arrondis */
-    box-sizing: border-box; /* La bordure est incluse dans la taille */
-    background-color: #fff; /* S'assure que le fond est blanc */
+    border-radius: 4px;
+    box-sizing: border-box;
+    background-color: #fff;
     display: block;
     overflow: hidden;
+    position: relative; 
 }
 
-/* Le reste du style pour le ruban (optionnel si vous l'avez déjà) */
 .toolbar-ribbon {
     display: flex;
     justify-content: center;
     gap: 12px;
     padding: 12px;
     background-color: #ffffff;
-    border: 2px solid #000000; /* Bordure aussi pour la toolbar */
+    border: 2px solid #000000;
     border-radius: 8px;
 }
 
@@ -30,12 +26,18 @@
     align-items: center;
     justify-content: center;
     min-width: 80px;
-    padding: 4px;
+    padding: 8px;
     border: 1px solid #333;
-    background: #eee;
+    background: #f3f4f6;
     cursor: pointer;
+    transition: all 0.2s ease;
 }
 
+.tool-btn:hover {
+    background-color: #e5e7eb;
+}
+
+/* --- MENU DE SÉLECTION ET ÉDITION --- */
 .selection-menu-container {
     position: absolute;
     top: 60px;
@@ -83,13 +85,13 @@
     flex-direction: column;
     font-weight: 500;
     font-size: 12px;
+    gap: 4px;
 }
 
 .selection-menu-input {
     padding: 4px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    margin-top: 2px;
 }
 
 .selection-menu-footer {
@@ -98,7 +100,7 @@
     margin-top: 5px;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 8px;
 }
 
 .selection-menu-delete-btn {
@@ -120,4 +122,44 @@
     font-size: 10px;
     color: #aaa;
     text-align: center;
+}
+
+.action-btn-secondary {
+    flex: 1; 
+    padding: 6px; 
+    cursor: pointer;
+    background-color: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 4px;
+    color: #0284c7;
+    font-size: 11px;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.action-btn-secondary:hover {
+    background-color: #e0f2fe;
+}
+
+.selection-menu-help-text {
+    color: #666;
+    font-size: 10px;
+    margin-top: 2px;
+    display: block; /* Assure que le small prend sa propre ligne */
+}
+
+/* Bouton avec icône centrée (utilisé dans MomentMenu et MeasurementMenu) */
+.selection-menu-icon-btn {
+    margin-top: 5px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+}
+
+.selection-menu-icon-large {
+    font-size: 18px;
+    line-height: 1;
 }
