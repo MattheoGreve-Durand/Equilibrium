@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Group, Stage, Layer, Line, Text, Circle } from 'react-konva';
 import { useData2D } from '../../contexts/Data2DContext';
+import { useUpdateFunctions } from '../../contexts/updateFunction.js';    
 import { 
   Beam, 
   DistributedLoad, 
@@ -9,7 +10,8 @@ import {
   PinnedSupport, 
   RollerSupport, 
   FixedSupport,
-  DimensionLine, 
+  DimensionLine,
+  AngleDimension,
 } from './Shapes.jsx';
 import { 
   Grid, 
@@ -24,10 +26,10 @@ import { handleToolClick, getToolHelp } from './tools/indexTool.js';
 export default function Canvas2D() {
   const dataContext = useData2D();
   const { 
-    beams, forces, loads, moments, pinned, rolled, fixed, measurements,
-    activeTool, updateElement, deleteElement 
+    beams, forces, loads, moments, pinned, rolled, fixed, measurements, angles,
+    activeTool, updateElement, deleteElement
   } = dataContext;
-  
+
   const divRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   
@@ -74,6 +76,7 @@ export default function Canvas2D() {
       case 'ROLLER': return rolled.find(s => s.id === selection.id);
       case 'MEASUREMENT': return measurements.find(m => m.id === selection.id);
       case 'MOMENT': return moments.find(m => m.id === selection.id);
+      case 'ANGLE': return angles.find(a => a.id === selection.id);
       default: return null;
     }
   };
@@ -241,6 +244,24 @@ export default function Canvas2D() {
               isToolActive={isToolActive}
             />
           ))}
+
+          {angles.map((a) => {
+              const b1 = beams.find(b => b.id === a.beamId1);
+              const b2 = beams.find(b => b.id === a.beamId2);
+              console.log("test");
+              if (!b1 || !b2) return null; // Sécurité si une poutre est supprimée
+              
+
+              return (
+                <AngleDimension 
+                  key={a.id} 
+                  a={a} b1={b1} b2={b2}
+                  isSelected={selection?.id === a.id && selection?.type === 'ANGLE'}
+                  onSelect={() => handleObjectSelect(a.id, 'ANGLE')}
+                  isToolActive={isToolActive}
+                />
+              );
+          })}
 
           {previewSnapPoint && activeTool && (
              <Circle 

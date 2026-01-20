@@ -20,6 +20,8 @@ export default function SelectionMenu({ selectedObject, parentObject, type, onUp
         return <MomentMenu moment={selectedObject} onUpdate={onUpdate} />;
       case 'LOAD': 
         return <LoadMenu load={selectedObject} onUpdate={onUpdate} />;
+      case 'ANGLE':
+        return <AngleMenu angle={selectedObject} onUpdate={onUpdate} />;
 
       case 'FIXED':
       case 'PINNED':
@@ -310,6 +312,53 @@ function SupportMenu({ support, onUpdate, type }) {
         <button onClick={() => onUpdate({ angle: 0 })} className="action-btn-secondary">0° (Sol)</button>
         <button onClick={() => onUpdate({ angle: 90 })} className="action-btn-secondary">90° (Mur)</button>
         <button onClick={() => onUpdate({ angle: -90 })} className="action-btn-secondary">-90°</button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Menu pour éditer l'Angle
+ */
+function AngleMenu({ angle, onUpdate }) {
+  // L'objet 'angle' stocké ne contient pas forcément la valeur courante (calculée à la volée).
+  // Mais ici on veut définir une "commande".
+  const [val, setVal] = useState("");
+
+  const handleApply = () => {
+    const v = parseFloat(val);
+    if (!isNaN(v)) {
+      onUpdate({ value: v });
+      setVal(""); // Reset après application
+    }
+  };
+
+  return (
+    <div className="selection-menu-grid">
+      <div style={{fontWeight:'bold', color:'green', marginBottom:5}}>Angle Connecté</div>
+      
+      <div style={{fontSize:11, color:'#666', marginBottom:10}}>
+        Modifier cet angle fera pivoter la seconde poutre autour du nœud commun.
+      </div>
+
+      <label className="selection-menu-label">
+        Définir l'angle (°):
+        <div style={{display:'flex', gap:5}}>
+          <input 
+            type="number" 
+            value={val}
+            placeholder="Ex: 90"
+            onChange={(e) => setVal(e.target.value)} 
+            className="selection-menu-input"
+          />
+          <button onClick={handleApply} className="action-btn-secondary">OK</button>
+        </div>
+      </label>
+      
+      <div style={{display:'flex', gap:5, marginTop:5}}>
+        <button onClick={() => onUpdate({ value: 90 })} className="action-btn-secondary">90°</button>
+        <button onClick={() => onUpdate({ value: 180 })} className="action-btn-secondary">180°</button>
+        <button onClick={() => onUpdate({ value: 45 })} className="action-btn-secondary">45°</button>
       </div>
     </div>
   );

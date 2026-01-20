@@ -526,3 +526,90 @@ export function DimensionLine({ d, index, isSelected, onSelect, isToolActive }) 
     </Group>
   );
 }
+
+/**
+ * Composant Angle Dimension.
+ * Affiche l'angle entre deux poutres connectées.
+ * @param {Object} a - Objet angle {id, beamId1, beamId2, cx, cy}
+ * @param {Object} b1 - Objet poutre 1
+ * @param {Object} b2 - Objet poutre 2
+ */
+export function AngleDimension({ a, b1, b2, isSelected, onSelect, isToolActive }) {
+  if (!b1 || !b2) return null;
+
+  const radius = 30; // Rayon de l'arc visuel
+  const cx = a.cx;
+  const cy = a.cy;
+
+  // 1. Calculer les vecteurs directeurs depuis le centre commun
+  // Pour b1
+  const x1 = (Math.abs(b1.x1 - cx) < 1) ? b1.x2 : b1.x1;
+  const y1 = (Math.abs(b1.y1 - cy) < 1) ? b1.y2 : b1.y1;
+  const angle1Rad = Math.atan2(y1 - cy, x1 - cx);
+
+  // Pour b2
+  const x2 = (Math.abs(b2.x1 - cx) < 1) ? b2.x2 : b2.x1;
+  const y2 = (Math.abs(b2.y1 - cy) < 1) ? b2.y2 : b2.y1;
+  const angle2Rad = Math.atan2(y2 - cy, x2 - cx);
+
+  // 2. Calculer la différence (l'angle entre les deux)
+  let diffRad = angle2Rad - angle1Rad;
+  
+  // Normalisation pour avoir un angle positif (0 à 360)
+  while (diffRad < 0) diffRad += 2 * Math.PI;
+  while (diffRad >= 2 * Math.PI) diffRad -= 2 * Math.PI;
+
+  const diffDeg = (diffRad * 180) / Math.PI;
+  
+  // 3. Dessin Konva
+  // Konva Arc prend "angle" (ouverture) et "rotation" (début)
+  // angle1Rad est en radians, Konva veut degrés pour rotation
+  const startDeg = (angle1Rad * 180) / Math.PI;
+
+  const color = isSelected ? "orange" : "green";
+
+  return (
+    <Group
+      x={cx} y={cy}
+      onClick={(e) => {
+        if (isToolActive) return;
+        e.cancelBubble = true;
+        if (onSelect) onSelect();
+      }}
+    >
+      {/* Secteur angulaire semi-transparent */}
+      <Arc
+        innerRadius={0}
+        outerRadius={radius}
+        angle={diffDeg}
+        rotation={startDeg}
+        fill={color}
+        opacity={0.2}
+      />
+      
+      {/* Ligne de l'arc */}
+      <Arc
+        innerRadius={radius}
+        outerRadius={radius}
+        angle={diffDeg}
+        rotation={startDeg}
+        stroke={color}
+        strokeWidth={2}
+      />
+
+      {/* Texte de la valeur au milieu de l'arc */}
+      <Text
+        // Position polaire approximative
+        x={ (radius + 15) * Math.cos(angle1Rad + diffRad/2) }
+        y={ (radius + 15) * Math.sin(angle1Rad + diffRad/2) }
+        text={`${diffDeg.toFixed(1)}°`}
+        fill={color}
+        fontSize={11}
+        fontStyle="bold"
+        align="center"
+        offsetX={15}
+        offsetY={5}
+      />
+    </Group>
+  );
+}
