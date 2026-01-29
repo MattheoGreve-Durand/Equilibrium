@@ -21,25 +21,16 @@ export const forceTool = {
     });
 
     if (bestBeam && bestProj) {
-      const dx = bestBeam.x2 - bestBeam.x1;
-      const dy = bestBeam.y2 - bestBeam.y1;
-      const beamAngleRad = Math.atan2(dy, dx);
-      const beamAngleDeg = (beamAngleRad * 180) / Math.PI;
-
-      // CORRECTION : On ajoute 90 degrés pour être perpendiculaire à la poutre
-      // On utilise un angle de base de 0 pour la flèche pointant vers le bas
-      console.log({
-        x: bestProj.x,
-        y: bestProj.y,
-        value: 100,
-        angle: beamAngleDeg,
-        beamId: bestBeam.id 
-      })
+      // CRÉATION STANDARD
+      // Angle 90 (Haut) par défaut.
+      // Valeur 100 (Arbitraire, positive).
+      // L'utilisateur pourra ajuster dans le menu.
+      
       addForce({
         x: bestProj.x,
         y: bestProj.y,
-        value: 100,
-        angle: beamAngleDeg ,
+        value: 100, 
+        angle: 90,   
         beamId: bestBeam.id 
       });
 
@@ -47,9 +38,8 @@ export const forceTool = {
     }
     return false;
   },
-  getHelpText: () => "Cliquez sur une poutre pour y placer une force perpendiculaire."
+  getHelpText: () => "Cliquez sur une poutre pour placer une force (défaut: 100N à 90°)."
 };
-
 
 // --- FONCTIONS UTILITAIRES MATHÉMATIQUES ---
 

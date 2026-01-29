@@ -26,7 +26,7 @@ export default function SelectionMenu({ selectedObject, parentObject, type, onUp
       case 'FIXED':
       case 'PINNED':
       case 'ROLLER':
-        //return <SupportMenu support={selectedObject} onUpdate={onUpdate} type={type} />;
+        return <SupportMenu support={selectedObject} onUpdate={onUpdate} type={type} />;
       default:
         return <div className="selection-menu-id-text">Propriétés non éditables pour cet élément.</div>;
     }
@@ -124,25 +124,20 @@ function BeamMenu({ beam, onUpdate }) {
 }
 
 function ForceMenu({ force, beam, onUpdate }) {
-  const beamAngle = beam 
-    ? (Math.atan2(beam.y2 - beam.y1, beam.x2 - beam.x1) * 180) / Math.PI 
-    : 0;
+  // Angle relatif actuel (défaut 90)
+  const currentRelAngle = force.angle !== undefined ? force.angle : 90;
 
-  const currentRelAngle = Math.round((force.angle || 0) - beamAngle);
+  const handleAngleChange = (inputValue) => {
+    let newAngle = parseFloat(inputValue);
+    if (isNaN(newAngle)) return;
 
-  const handleAngleChange = (relValue) => {
-    const rel = parseFloat(relValue);
-    if (isNaN(rel)) return;
-    onUpdate({ angle: beamAngle + rel });
-  };
+    // Bornage strict [0, 180]
+    if (newAngle < 0) newAngle = 0;
+    if (newAngle > 180) newAngle = 180;
 
-  const handleBuckling = (targetNode) => {
-    if (!beam) return;
-    if (targetNode === 1) {
-      onUpdate({ x: beam.x1, y: beam.y1, angle: beamAngle });
-    } else {
-      onUpdate({ x: beam.x2, y: beam.y2, angle: beamAngle + 180 });
-    }
+    onUpdate({ 
+      angle: parseFloat(newAngle.toFixed(2))
+    });
   };
 
   return (
@@ -158,30 +153,34 @@ function ForceMenu({ force, beam, onUpdate }) {
       </label>
 
       <label className="selection-menu-label">
-        Angle relatif (°):
+        Angle relatif (0-180°):
         <div className="selection-menu-grid" style={{ gridTemplateColumns: '1fr auto', alignItems: 'center' }}>
           <input 
             type="number" 
             value={currentRelAngle} 
             onChange={(e) => handleAngleChange(e.target.value)} 
             className="selection-menu-input"
+            min="0" max="180"
           />
-          <button onClick={() => handleAngleChange(90)} className="action-btn-secondary" title="Perpendiculaire">⊥</button>
+          {/* Boutons rapides */}
+          <div style={{display:'flex', gap:2}}>
+            <button onClick={() => handleAngleChange(90)} className="action-btn-secondary" title="90°">⊥</button>
+            <button onClick={() => handleAngleChange(45)} className="action-btn-secondary" title="45°">45</button>
+          </div>
         </div>
       </label>
 
-      {beam && (
-        <div className="selection-menu-footer">
-          <label className="selection-menu-label">Mode Flambement (Nœuds):</label>
-          <div className="selection-menu-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
-            <button onClick={() => handleBuckling(1)} className="action-btn-secondary">Nœud 1</button>
-            <button onClick={() => handleBuckling(2)} className="action-btn-secondary">Nœud 2</button>
-          </div>
-        </div>
-      )}
+      <div style={{fontSize:'10px', color:'#666', marginTop:5}}>
+        <strong>Convention :</strong><br/>
+        0° = Droite (Axe poutre)<br/>
+        90° = Haut<br/>
+        180° = Gauche<br/>
+        (Anti-horaire)
+      </div>
     </div>
   );
 }
+
 
 function MeasurementMenu({ measurement, onUpdate }) {
   const rawOffset = measurement.offset !== undefined ? measurement.offset : 50;

@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Group, Stage, Layer, Line, Text, Circle } from 'react-konva';
 import { useData2D } from '../../contexts/Data2DContext';
-import { useUpdateFunctions } from '../../contexts/updateFunction.js';    
+   
 import { 
   Beam, 
   DistributedLoad, 
@@ -182,14 +182,21 @@ export default function Canvas2D() {
             />
           ))}
 
-          {forces.map((f, index) => (
-            <Force 
-              key={f.id} f={f} index={index}
-              isSelected={selection?.id === f.id && selection?.type === 'FORCE'}
-              onSelect={() => handleObjectSelect(f.id, 'FORCE')}
-              isToolActive={isToolActive}
-            />
-          ))}
+          {forces.map((f, index) => {
+            const parentBeam = beams.find(b => b.id === f.beamId);
+            
+            return (
+              <Force 
+                key={f.id} 
+                f={f} 
+                index={index}
+                beam={parentBeam} // <--- AJOUT CRUCIAL
+                isSelected={selection?.id === f.id && selection?.type === 'FORCE'}
+                onSelect={() => handleObjectSelect(f.id, 'FORCE')}
+                isToolActive={isToolActive}
+              />
+            );
+          })}
 
           {measurements.map((m, index) => (
             <DimensionLine 
@@ -248,7 +255,6 @@ export default function Canvas2D() {
           {angles.map((a) => {
               const b1 = beams.find(b => b.id === a.beamId1);
               const b2 = beams.find(b => b.id === a.beamId2);
-              console.log("test");
               if (!b1 || !b2) return null; // Sécurité si une poutre est supprimée
               
 

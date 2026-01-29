@@ -2,7 +2,7 @@ import React from 'react';
 import { useData2D } from '../../contexts/Data2DContext';
 
 export default function Toolbar2D() {
-  const { activeTool, setActiveTool } = useData2D();
+  const { activeTool, setActiveTool, debugStructure } = useData2D();
 
   const toggleTool = (toolName) => {
     if (activeTool === toolName) {
@@ -91,6 +91,16 @@ export default function Toolbar2D() {
         {activeTool === 'DIMENSION' ? 'Annuler' : 'Cotation'}
       </button>
 
+    <div style={{ width: '1px', backgroundColor: '#cbd5e1', margin: '0 4px' }}></div>
+
+      <button 
+        className="tool-btn" 
+        onClick={() => debugStructure()}
+        style={{ borderColor: 'green', color: 'green' }}
+      >
+        <span className="icon-placeholder" style={{ background: 'green' }}></span>
+        JSON
+      </button>
     </div>
   );
 }

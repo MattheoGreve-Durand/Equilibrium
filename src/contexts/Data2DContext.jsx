@@ -1,7 +1,5 @@
 import React, { createContext, useContext, useState } from 'react'
-import { update } from 'three/examples/jsm/libs/tween.module.js'
-import { add } from 'three/tsl'
-import {useUpdateFunctions} from './updateFunction.js'
+import { generateStructure } from '../utils/structureGenerator';
 
 const Data2DContext = createContext()
 
@@ -9,6 +7,8 @@ export function Data2DProvider({ children }) {
   // --- ÉTAT DES OUTILS ---
   // null = aucun outil, 'BEAM' = création poutre, 'FORCE' = création force...
   const [activeTool, setActiveTool] = useState(null) 
+
+  
   
   // --- DONNÉES EXISTANTES ---
   const [beams, setBeams] = useState([])
@@ -73,12 +73,26 @@ export function Data2DProvider({ children }) {
     }
   }
 
+  const debugStructure = () => {
+    // On passe l'état actuel complet au générateur
+    const currentContext = { beams, forces, loads, moments, fixed, pinned, rolled };
+    
+    const jsonStructure = generateStructure(currentContext);
+    
+    console.log("--- STRUCTURE GÉNÉRÉE (Format Alix) ---");
+    console.log(JSON.stringify(jsonStructure, null, 2)); // Affichage joli
+    console.log("---------------------------------------");
+    
+    return jsonStructure;
+  };
+
   const services = {
     activeTool, setActiveTool, // <-- Export de l'état de l'outil
     beams, forces, loads, moments, fixed, pinned, rolled, measurements, angles,
     addBeam, addForce, addLoad, addMoment, addFixed, addPinned, addRolled, addMeasurement, addAngle,
     updateElement,
-    deleteElement
+    deleteElement,
+    debugStructure
   }
 
   const updateBeamWithNodes = (id, newProps) => {

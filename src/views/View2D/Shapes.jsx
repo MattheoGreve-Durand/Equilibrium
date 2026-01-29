@@ -6,37 +6,44 @@ import { Stage, Layer, Line, Circle, Group, Arrow, Text, Arc} from 'react-konva'
  * @param {Object} f - Objet contenant {id, x, y, value}
  * @param {number} index - Index de la force pour la numérotation (F1, F2...)
  */
-export function Force({ f, index, isSelected, onSelect, isToolActive }) {
+export function Force({ f, index, beam, isSelected, onSelect, isToolActive }) {
   const isNegative = f.value < 0;
   const height = 50;
-  const rotation = f.angle || 0; 
+  
+  // 1. Angle de la poutre (Mathématique CCW)
+  // On inverse atan2 pour passer du repère écran (Y bas) au repère math (Y haut)
+  let beamAngleMath = 0;
+  if (beam) {
+     beamAngleMath = - (Math.atan2(beam.y2 - beam.y1, beam.x2 - beam.x1) * 180) / Math.PI;
+  }
+
+  // 2. Angle total = Angle Poutre + Angle Relatif Force
+  const forceAngleRel = f.angle !== undefined ? f.angle : 90;
+  const totalAngleMath = beamAngleMath + forceAngleRel;
+
+  // 3. Conversion pour l'affichage Konva
+  // Le sprite Arrow pointe vers le BAS (+90° Konva).
+  // Math 0° (Droite) correspond à Konva 0° (Droite).
+  // Pour faire pointer l'Arrow (qui est à +90° Konva) vers 0° Konva, il faut tourner de -90°.
+  // Pour faire pointer vers l'angle Theta (Math CCW), qui est -Theta (Konva CW),
+  // Il faut : Rotation = -Theta - 90.
+  
+  const rotation = -totalAngleMath - 90;
 
   return (
     <Group 
       x={f.x} y={f.y} rotation={rotation}
-      // GESTION DU CLIC INTELLIGENTE
       onClick={(e) => {
-        // Si un outil est actif, on laisse le clic passer au Stage (pour que l'outil fonctionne)
         if (isToolActive) return; 
-        
-        // Sinon, on capture le clic pour la sélection
         e.cancelBubble = true;
         if (onSelect) onSelect();
       }}
-      // CURSEUR INTELLIGENT
-      onMouseEnter={(e) => {
-        if (isToolActive) return; // Pas de changement de curseur si on construit
-        const container = e.target.getStage().container();
-        container.style.cursor = "pointer";
-      }}
-      onMouseLeave={(e) => {
-        if (isToolActive) return;
-        const container = e.target.getStage().container();
-        container.style.cursor = "default";
-      }}
+      onMouseEnter={(e) => { if (!isToolActive) e.target.getStage().container().style.cursor = "pointer"; }}
+      onMouseLeave={(e) => { if (!isToolActive) e.target.getStage().container().style.cursor = "default"; }}
     >
       <Arrow
-        points={isNegative ? [0, 0, 0, -height] : [0, -height, 0, 0]}
+        // Si la valeur est négative, on inverse visuellement la flèche
+        points={isNegative ? [0, 0, 0, height] : [0, height, 0, 0]}
         pointerLength={10}
         pointerWidth={10}
         fill={isSelected ? "orange" : "red"}
@@ -46,14 +53,15 @@ export function Force({ f, index, isSelected, onSelect, isToolActive }) {
         pointerAtEnd={true}
       />
       <Text
-        x={-35}
-        y={-height - 25}
+        x={35}
+        y={height+25}
         text={`F${index + 1} : ${f.value} N`}
         fill={isSelected ? "orange" : "red"}
         fontStyle="bold"
         fontSize={12}
         align="center"
         width={70}
+        // Contre-rotation pour le texte
         rotation={-rotation} 
       />
     </Group>
@@ -204,7 +212,6 @@ export function DistributedLoad({ l, index, isSelected, onSelect, isToolActive }
           stroke={color}
           strokeWidth={1}
           
-          // On garde toujours la flèche à la fin du tracé
           pointerAtEnd={true}
           pointerAtBeginning={false}
         />
@@ -343,32 +350,36 @@ export function FixedSupport({ s, index, isSelected, onSelect, isToolActive }) {
   const height = 30;
   const width = 10;
   const label = `E${index + 1}`;
-  const angle = s.angle || 0;
-  const color = isSelected ? "orange" : "#334155"; // Gestion couleur
+  
+  const rotation = -s.angle || 0;
+  const color = isSelected ? "orange" : "#334155"; 
 
+  // On dessine l'encastrement HORIZONTALEMENT par défaut (pour angle = 0)
   const hatches = [];
   for (let i = -height / 2; i <= height / 2; i += 5) {
     hatches.push(
-      <Line key={`hatch-${i}`} points={[-width, i + 5, 0, i]} stroke={color} strokeWidth={1} />
+      // Hachures diagonales sur une ligne horizontale
+      <Line key={`hatch-${i}`} points={[i, 0, i - 5, width]} stroke={color} strokeWidth={1} />
     );
   }
 
   return (
     <Group 
-      x={s.x} y={s.y} rotation={angle}
+      x={s.x} y={s.y} rotation={rotation}
       onClick={(e) => {
         if (isToolActive) return;
         e.cancelBubble = true;
         if (onSelect) onSelect();
       }}
     >
-      <Line points={[0, -height / 2, 0, height / 2]} stroke={color} strokeWidth={3} lineCap="round" />
+      {/* Ligne principale horizontale (Sol) */}
+      <Line points={[-height / 2, 0, height / 2, 0]} stroke={color} strokeWidth={3} lineCap="round" />
       {hatches}
       <Circle radius={3} fill={color} />
       <Text
-        x={0} y={-height / 2 - 20}
+        x={-20} y={15}
         text={label} fill={color} fontSize={12} fontStyle="bold"
-        rotation={-angle} align="center" width={40} offsetX={20}
+        rotation={-rotation} align="center" width={40}
       />
     </Group>
   );
@@ -382,24 +393,22 @@ export function FixedSupport({ s, index, isSelected, onSelect, isToolActive }) {
 export function RollerSupport({ s, index, isSelected, onSelect, isToolActive }) {
   const size = 15; 
   const label = `R${index + 1}`;
-  const angle = s.angle || 0; // Ajout rotation
+  // LOGIQUE D'ANGLE : Inversion simple (-s.angle)
+  const rotation = -s.angle || 0;
   const color = isSelected ? "orange" : "#334155";
-  const bg = isSelected ? "#fff7ed" : "white"; // Fond légèrement teinté si sélectionné
+  const bg = isSelected ? "#fff7ed" : "white";
 
   return (
     <Group 
-      x={s.x} y={s.y} rotation={angle}
-      onClick={(e) => {
-        if (isToolActive) return;
-        e.cancelBubble = true;
-        if (onSelect) onSelect();
-      }}
+      x={s.x} y={s.y} rotation={rotation}
+      onClick={(e) => { if (!isToolActive) { e.cancelBubble = true; if (onSelect) onSelect(); }}}
     >
+      {/* Triangle orienté vers le HAUT (contact à 0,0) */}
       <Line points={[-10, size, 10, size, 0, 0]} closed stroke={color} strokeWidth={2} fill={bg} />
       <Circle x={-6} y={size + 4} radius={4} stroke={color} strokeWidth={2} fill={bg} />
       <Circle x={6} y={size + 4} radius={4} stroke={color} strokeWidth={2} fill={bg} />
       <Line points={[-15, size + 9, 15, size + 9]} stroke={isSelected ? "orange" : "#94a3b8"} strokeWidth={2} />
-      <Text x={15} y={0} text={label} fill={color} fontSize={12} fontStyle="bold" rotation={-angle} />
+      <Text x={15} y={0} text={label} fill={color} fontSize={12} fontStyle="bold" rotation={-rotation} />
     </Group>
   );
 }
@@ -412,31 +421,25 @@ export function RollerSupport({ s, index, isSelected, onSelect, isToolActive }) 
 export function PinnedSupport({ s, index, isSelected, onSelect, isToolActive }) {
   const size = 15;
   const label = `A${index + 1}`;
-  const angle = s.angle || 0; // Ajout rotation
+  // LOGIQUE D'ANGLE : Inversion simple (-s.angle)
+  const rotation = -s.angle || 0;
   const color = isSelected ? "orange" : "#334155";
   const bg = isSelected ? "#fff7ed" : "white";
 
   return (
     <Group 
-      x={s.x} y={s.y} rotation={angle}
-      onClick={(e) => {
-        if (isToolActive) return;
-        e.cancelBubble = true;
-        if (onSelect) onSelect();
-      }}
+      x={s.x} y={s.y} rotation={rotation}
+      onClick={(e) => { if (!isToolActive) { e.cancelBubble = true; if (onSelect) onSelect(); }}}
     >
       <Line points={[-10, size, 10, size, 0, 0]} closed stroke={color} strokeWidth={2} fill={bg} />
       <Line points={[-15, size, 15, size]} stroke={color} strokeWidth={2} />
-      
-      {/* Hachures sol */}
       <Group y={size}>
         <Line points={[-12, 0, -15, 5]} stroke="#94a3b8" strokeWidth={1} />
         <Line points={[-5, 0, -8, 5]} stroke="#94a3b8" strokeWidth={1} />
         <Line points={[2, 0, -1, 5]} stroke="#94a3b8" strokeWidth={1} />
         <Line points={[9, 0, 6, 5]} stroke="#94a3b8" strokeWidth={1} />
       </Group>
-
-      <Text x={15} y={0} text={label} fill={color} fontSize={12} fontStyle="bold" rotation={-angle} />
+      <Text x={15} y={0} text={label} fill={color} fontSize={12} fontStyle="bold" rotation={-rotation} />
     </Group>
   );
 }
@@ -537,34 +540,39 @@ export function DimensionLine({ d, index, isSelected, onSelect, isToolActive }) 
 export function AngleDimension({ a, b1, b2, isSelected, onSelect, isToolActive }) {
   if (!b1 || !b2) return null;
 
-  const radius = 30; // Rayon de l'arc visuel
-  const cx = a.cx;
-  const cy = a.cy;
+  const radius = 30;
+  const { cx, cy } = a;
 
-  // 1. Calculer les vecteurs directeurs depuis le centre commun
-  // Pour b1
-  const x1 = (Math.abs(b1.x1 - cx) < 1) ? b1.x2 : b1.x1;
-  const y1 = (Math.abs(b1.y1 - cy) < 1) ? b1.y2 : b1.y1;
-  const angle1Rad = Math.atan2(y1 - cy, x1 - cx);
-
-  // Pour b2
-  const x2 = (Math.abs(b2.x1 - cx) < 1) ? b2.x2 : b2.x1;
-  const y2 = (Math.abs(b2.y1 - cy) < 1) ? b2.y2 : b2.y1;
-  const angle2Rad = Math.atan2(y2 - cy, x2 - cx);
-
-  // 2. Calculer la différence (l'angle entre les deux)
-  let diffRad = angle2Rad - angle1Rad;
+  // 1. VECTEURS INTRINSÈQUES (P1 -> P2)
+  // Base absolue du calcul JSON
+  const vParentInt = { x: b1.x2 - b1.x1, y: b1.y2 - b1.y1 };
+  const vChildInt = { x: b2.x2 - b2.x1, y: b2.y2 - b2.y1 };
   
-  // Normalisation pour avoir un angle positif (0 à 360)
-  while (diffRad < 0) diffRad += 2 * Math.PI;
-  while (diffRad >= 2 * Math.PI) diffRad -= 2 * Math.PI;
-
-  const diffDeg = (diffRad * 180) / Math.PI;
+  // 2. CALCUL VALEUR (JSON)
+  const dotJson = vParentInt.x * vChildInt.x + vParentInt.y * vChildInt.y;
+  const magP = Math.sqrt(vParentInt.x**2 + vParentInt.y**2);
+  const magC = Math.sqrt(vChildInt.x**2 + vChildInt.y**2);
+  let cosJson = magP * magC !== 0 ? dotJson / (magP * magC) : 0;
+  cosJson = Math.max(-1, Math.min(1, cosJson));
   
-  // 3. Dessin Konva
-  // Konva Arc prend "angle" (ouverture) et "rotation" (début)
-  // angle1Rad est en radians, Konva veut degrés pour rotation
-  const startDeg = (angle1Rad * 180) / Math.PI;
+  let degJson = (Math.acos(cosJson) * 180) / Math.PI;
+  const crossJson = vParentInt.x * vChildInt.y - vParentInt.y * vChildInt.x;
+  
+  // Gestion du signe
+  if (crossJson < 0) degJson = -degJson;
+  
+  // Valeur textuelle finale
+  const jsonAngleText = -parseFloat(degJson.toFixed(2));
+
+  // 3. AFFICHAGE VISUEL (KONVA)
+  // On aligne strictement le graphisme sur la mathématique.
+  
+  // Angle de départ = Direction de la poutre mère (P1->P2)
+  const startDeg = (Math.atan2(vParentInt.y, vParentInt.x) * 180) / Math.PI;
+
+  // Angle de balayage = Valeur du texte (inversée pour le repère écran Y-down)
+  // On ne fait AUCUNE normalisation (pas de while > 180) pour respecter les angles obtus.
+  const konvaSweepAngle = -jsonAngleText;
 
   const color = isSelected ? "orange" : "green";
 
@@ -577,38 +585,26 @@ export function AngleDimension({ a, b1, b2, isSelected, onSelect, isToolActive }
         if (onSelect) onSelect();
       }}
     >
-      {/* Secteur angulaire semi-transparent */}
       <Arc
-        innerRadius={0}
-        outerRadius={radius}
-        angle={diffDeg}
+        innerRadius={0} outerRadius={radius}
+        angle={konvaSweepAngle} 
         rotation={startDeg}
-        fill={color}
-        opacity={0.2}
-      />
-      
-      {/* Ligne de l'arc */}
-      <Arc
-        innerRadius={radius}
-        outerRadius={radius}
-        angle={diffDeg}
-        rotation={startDeg}
-        stroke={color}
-        strokeWidth={2}
+        fill={color} opacity={0.25}
       />
 
-      {/* Texte de la valeur au milieu de l'arc */}
+      <Arc
+        innerRadius={radius} outerRadius={radius}
+        angle={konvaSweepAngle}
+        rotation={startDeg}
+        stroke={color} strokeWidth={2}
+      />
+
       <Text
-        // Position polaire approximative
-        x={ (radius + 15) * Math.cos(angle1Rad + diffRad/2) }
-        y={ (radius + 15) * Math.sin(angle1Rad + diffRad/2) }
-        text={`${diffDeg.toFixed(1)}°`}
-        fill={color}
-        fontSize={11}
-        fontStyle="bold"
-        align="center"
-        offsetX={15}
-        offsetY={5}
+        x={(radius + 15) * Math.cos((startDeg + konvaSweepAngle / 2) * Math.PI / 180)}
+        y={(radius + 15) * Math.sin((startDeg + konvaSweepAngle / 2) * Math.PI / 180)}
+        text={`${jsonAngleText.toFixed(1)}°`}
+        fill={color} fontSize={11} fontStyle="bold" align="center"
+        offsetX={15} offsetY={5}
       />
     </Group>
   );
