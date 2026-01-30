@@ -540,6 +540,8 @@ export function DimensionLine({ d, index, isSelected, onSelect, isToolActive }) 
 export function AngleDimension({ a, b1, b2, isSelected, onSelect, isToolActive }) {
   if (!b1 || !b2) return null;
 
+  let offset = 0;
+
   const radius = 30;
   const { cx, cy } = a;
 
@@ -589,6 +591,8 @@ export function AngleDimension({ a, b1, b2, isSelected, onSelect, isToolActive }
         innerRadius={0} outerRadius={radius}
         angle={konvaSweepAngle} 
         rotation={startDeg}
+        clockwise={konvaSweepAngle < 0}
+        stroke={color} strokeWidth={2}
         fill={color} opacity={0.25}
       />
 
@@ -596,6 +600,7 @@ export function AngleDimension({ a, b1, b2, isSelected, onSelect, isToolActive }
         innerRadius={radius} outerRadius={radius}
         angle={konvaSweepAngle}
         rotation={startDeg}
+        clockwise={konvaSweepAngle < 0}
         stroke={color} strokeWidth={2}
       />
 

@@ -44,46 +44,28 @@ export function generateStructure(dataContext) {
 }
 
 function buildBeamNode(beam, parentBeam, context, processedIds, globalOrigin) {
-  // --- 1. Calcul de l'angle (Reste inchangé car déjà corrigé pour le sens anti-horaire) ---
+  // ... (Calcul angle et logique vecteurs inchangés) ...
+  // ... (Je remets le code de calcul d'angle pour la cohérence, mais c'est surtout la fin qui change) ...
+
   let angleRelatif = 0;
   const gridSize = 50; 
 
   if (parentBeam) {
-    // Vecteurs écran (Y vers le bas)
-    const vParent = { 
-      x: (parentBeam.x2 - parentBeam.x1), 
-      y: (parentBeam.y2 - parentBeam.y1)
-    };
-    const vChild = { 
-      x: (beam.x2 - beam.x1), 
-      y: (beam.y2 - beam.y1)
-    };
-
-    // Produit Scalaire
+    const vParent = { x: (parentBeam.x2 - parentBeam.x1), y: (parentBeam.y2 - parentBeam.y1) };
+    const vChild = { x: (beam.x2 - beam.x1), y: (beam.y2 - beam.y1) };
     const dotProduct = vParent.x * vChild.x + vParent.y * vChild.y;
     const magParent = Math.sqrt(vParent.x ** 2 + vParent.y ** 2);
     const magChild = Math.sqrt(vChild.x ** 2 + vChild.y ** 2);
-
     let cosTheta = 0;
-    if (magParent * magChild !== 0) {
-      cosTheta = dotProduct / (magParent * magChild);
-    }
+    if (magParent * magChild !== 0) cosTheta = dotProduct / (magParent * magChild);
     cosTheta = Math.max(-1, Math.min(1, cosTheta));
-    
     let deg = (Math.acos(cosTheta) * 180) / Math.PI;
-
-    // Produit Vectoriel pour le signe
     const crossProduct = vParent.x * vChild.y - vParent.y * vChild.x;
     if (crossProduct < 0) deg = -deg;
-
-    // Inversion pour le sens trigonométrique
     angleRelatif = -parseFloat(deg.toFixed(2));
   }
 
-  // --- 2. Attachments ---
   const attachments = getAttachmentsForBeam(beam, context, globalOrigin);
-
-  // --- 3. Enfants ---
   const childBeams = findConnectedBeams(beam, context.beams, processedIds);
   const childNodes = childBeams.map(child => {
     processedIds.add(child.id);
@@ -91,31 +73,26 @@ function buildBeamNode(beam, parentBeam, context, processedIds, globalOrigin) {
   });
   const allChildren = [...attachments, ...childNodes];
 
-  // --- 4. Calcul des Coordonnées CORRIGÉ (Y inversé) ---
-  
-  // X : (Pos - Origine) / 50 -> Pas de changement
+  // Calcul Coordonnées
   const x1 = (beam.x1 - globalOrigin.x) / gridSize;
   const x2 = (beam.x2 - globalOrigin.x) / gridSize;
-
-  // Y : -(Pos - Origine) / 50 -> LE SIGNE MOINS EST CRUCIAL ICI
-  // Si je descends (y > origin), le résultat devient négatif.
   const y1 = -(beam.y1 - globalOrigin.y) / gridSize;
   const y2 = -(beam.y2 - globalOrigin.y) / gridSize;
-
   const clean = (val) => parseFloat(val.toFixed(3));
 
+  // --- MODIFICATION ICI : Mapping des propriétés dynamiques ---
   return {
     id: beam.id,
     type: "poutre",
-    coords: [
-      [clean(x1), clean(y1)], 
-      [clean(x2), clean(y2)]
-    ],
-    form: beam.shape || "rectangulaire",
+    coords: [[clean(x1), clean(y1)], [clean(x2), clean(y2)]],
+    
+    // Propriétés dynamiques (avec valeurs par défaut si non définies)
+    form: beam.shape || "Rectangulaire",
     longueur: calculateLength(beam),
-    largeur: 10,
-    hauteur: beam.thickness || 40,
-    epaisseur: 0.1,
+    largeur: beam.width || 10,      // Valeur utilisateur ou défaut 10
+    hauteur: beam.height || 40,     // Valeur utilisateur ou défaut 40
+    epaisseur: beam.thickness || 1, // Valeur utilisateur ou défaut 1
+    
     angle: angleRelatif,
     child: allChildren
   };

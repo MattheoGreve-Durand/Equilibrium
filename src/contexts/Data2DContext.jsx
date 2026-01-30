@@ -8,7 +8,30 @@ export function Data2DProvider({ children }) {
   // null = aucun outil, 'BEAM' = création poutre, 'FORCE' = création force...
   const [activeTool, setActiveTool] = useState(null) 
 
-  
+  const deleteManyElements = (items) => {
+    // items est un tableau de { id, type }
+    if (!items || items.length === 0) return;
+
+    // On trie les IDs par type pour faire des suppressions groupées
+    const idsByType = items.reduce((acc, item) => {
+      if (!acc[item.type]) acc[item.type] = [];
+      acc[item.type].push(item.id);
+      return acc;
+    }, {});
+
+    // On applique les suppressions
+    if (idsByType['BEAM']) setBeams(prev => prev.filter(b => !idsByType['BEAM'].includes(b.id)));
+    if (idsByType['FORCE']) setForces(prev => prev.filter(f => !idsByType['FORCE'].includes(f.id)));
+    if (idsByType['MOMENT']) setMoment(prev => prev.filter(m => !idsByType['MOMENT'].includes(m.id)));
+    if (idsByType['LOAD']) setLoad(prev => prev.filter(l => !idsByType['LOAD'].includes(l.id)));
+    if (idsByType['MEASUREMENT']) setMeasurements(prev => prev.filter(m => !idsByType['MEASUREMENT'].includes(m.id)));
+    if (idsByType['ANGLE']) setAngles(prev => prev.filter(a => !idsByType['ANGLE'].includes(a.id)));
+    
+    // Supports
+    if (idsByType['FIXED']) setFixed(prev => prev.filter(s => !idsByType['FIXED'].includes(s.id)));
+    if (idsByType['PINNED']) setPinned(prev => prev.filter(s => !idsByType['PINNED'].includes(s.id)));
+    if (idsByType['ROLLER']) setRolled(prev => prev.filter(s => !idsByType['ROLLER'].includes(s.id)));
+  };
   
   // --- DONNÉES EXISTANTES ---
   const [beams, setBeams] = useState([])
@@ -92,7 +115,8 @@ export function Data2DProvider({ children }) {
     addBeam, addForce, addLoad, addMoment, addFixed, addPinned, addRolled, addMeasurement, addAngle,
     updateElement,
     deleteElement,
-    debugStructure
+    debugStructure,
+    deleteManyElements
   }
 
   const updateBeamWithNodes = (id, newProps) => {

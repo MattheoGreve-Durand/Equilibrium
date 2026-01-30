@@ -1,4 +1,0 @@
--- partir du sens anti horaire sinon negatif
--- revoir tous les angles merci alix
--- centraliser les coordonnees, 0, 0 poutre du debut
--- corriger neouds flambement

@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState } from 'react'
 const ModeContext = createContext()
 
 export function ModeProvider({ children }) {
-  const [mode, setMode] = useState('2D')
+  const [mode, setMode] = useState('3D')
   const toggleMode = () => setMode((m) => (m === '2D' ? '3D' : '2D'))
 
   return (
