@@ -43,7 +43,9 @@
                     {
                         "id": 1,
                         "type": "charge-repartie",
-                        "valeur": 500,
+                        "valeur_debut": 500,
+                        "valeur_fin": 0,
+                        "triangle": false,
                         "coords": [
                             [54, 2],
                             [65, 1]
