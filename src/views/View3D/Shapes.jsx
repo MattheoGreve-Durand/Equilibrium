@@ -13,67 +13,72 @@ const COLORS = {
   TEXT: '#1e293b'
 };
 
-function ForceAngleArcs({ angles }) {
-  const radius = 0.8; 
+function ForceAngleArcs({ startPos, endPos }) {
+  const radius = 1; 
   const markerSize = 0.03; 
 
-  // Si la force vient d'être créée et n'a pas encore été éditée, on applique les angles par défaut (vers le bas)
-  const safeAngles = angles || { x: 0, y: 0, z: 270 };
+  // On déduit simplement le vecteur de la force de [Début -> Fin]
+  const v = useMemo(() => {
+    const start = new THREE.Vector3(...startPos);
+    const end = new THREE.Vector3(...endPos);
+    return new THREE.Vector3().subVectors(end, start).normalize();
+  }, [startPos, endPos]);
+  
+  const xAxis = new THREE.Vector3(-1, 0, 0);
+  const yAxis = new THREE.Vector3(0, -1, 0);
+  const zAxis = new THREE.Vector3(0, 0, -1);
 
-  const { xy, yz, zx } = useMemo(() => {
+  const renderArc = (axisVec, color, labelOffset = 1.1) => {
+    const angle = v.angleTo(axisVec);
     
-    // Génère l'arc uniquement basé sur la valeur en degrés du menu
-    const createArcData = (plane, angleDeg) => {
-      const angle = angleDeg * Math.PI / 180;
-      const points = [];
-      const segments = 32;
-      
-      for (let i = 0; i <= segments; i++) {
-        const theta = (angle * i) / segments;
-        if (plane === 'XY') points.push([Math.cos(theta) * radius, Math.sin(theta) * radius, 0]);
-        if (plane === 'YZ') points.push([0, Math.cos(theta) * radius, Math.sin(theta) * radius]);
-        if (plane === 'ZX') points.push([Math.sin(theta) * radius, 0, Math.cos(theta) * radius]);
-      }
-      
-      let startProj, endProj;
-      if (plane === 'XY') { startProj = [radius, 0, 0]; endProj = [Math.cos(angle) * radius, Math.sin(angle) * radius, 0]; }
-      if (plane === 'YZ') { startProj = [0, radius, 0]; endProj = [0, Math.cos(angle) * radius, Math.sin(angle) * radius]; }
-      if (plane === 'ZX') { startProj = [0, 0, radius]; endProj = [Math.sin(angle) * radius, 0, Math.cos(angle) * radius]; }
+    
 
-      return { points, startProj, endProj, angleText: angleDeg.toFixed(1) + '°' };
-    };
 
-    return {
-      xy: createArcData('XY', safeAngles.z), // L'angle Z tourne dans le plan XY
-      yz: createArcData('YZ', safeAngles.x), // L'angle X tourne dans le plan YZ
-      zx: createArcData('ZX', safeAngles.y)  // L'angle Y tourne dans le plan ZX
-    };
-  }, [safeAngles]); // Se met à jour uniquement si un angle du menu change
+    // THREE.js gère la rotation parfaitement d'un vecteur à un autre sans calcul manuel
+    const qBase = new THREE.Quaternion().setFromUnitVectors(v, axisVec);
+    
+    const points = [];
+    const segments = 32;
+    for (let i = 0; i <= segments; i++) {
+      const t = i / segments;
+      // .slerp() interpole la courbe 3D proprement
+      const qInterp = new THREE.Quaternion().slerp(qBase, t);
+      const pt = v.clone().applyQuaternion(qInterp).multiplyScalar(radius);
+      points.push([pt.x, pt.y, pt.z]);
+    }
 
-  const renderPlaneArc = (data, color) => (
-    <group>
-      <Line points={data.points} color={color} lineWidth={2} />
-      <Line points={[[0,0,0], data.startProj]} color={color} lineWidth={1} dashed dashSize={0.05} gapSize={0.05} opacity={0.5} transparent />
-      <Sphere position={data.startProj} args={[markerSize, 8, 8]}><meshBasicMaterial color={color} /></Sphere>
-      <Line points={[[0,0,0], data.endProj]} color={color} lineWidth={1} dashed dashSize={0.05} gapSize={0.05} />
-      <Sphere position={data.endProj} args={[markerSize, 8, 8]}><meshBasicMaterial color={color} /></Sphere>
-      <Label3D position={[data.endProj[0]*1.1, data.endProj[1]*1.1, data.endProj[2]*1.1]} text={data.angleText} color={color} fontSize={0.15} />
-    </group>
-  );
+    const startProj = v.clone().multiplyScalar(radius).toArray();
+    const endProj = axisVec.clone().multiplyScalar(radius).toArray();
+    const angleDeg = THREE.MathUtils.radToDeg(angle).toFixed(1) + '°';
+
+    return (
+      <group>
+        <Line points={points} color={color} lineWidth={2} />
+        
+        <Line points={[[0,0,0], startProj]} color={color} lineWidth={1} dashed dashSize={0.05} gapSize={0.05} opacity={0.5} transparent />
+        <Sphere position={startProj} args={[markerSize, 8, 8]}><meshBasicMaterial color={color} /></Sphere>
+        
+        <Line points={[[0,0,0], endProj]} color={color} lineWidth={1} dashed dashSize={0.05} gapSize={0.05} />
+        <Sphere position={endProj} args={[markerSize, 8, 8]}><meshBasicMaterial color={color} /></Sphere>
+
+        <Label3D position={[endProj[0]*labelOffset, endProj[1]*labelOffset, endProj[2]*labelOffset]} text={angleDeg} color={color} fontSize={0.15} />
+      </group>
+    );
+  };
 
   return (
-    <group>
+    // On centre tout le système d'arcs sur la position de DÉBUT (la queue de la flèche)
+    <group position={startPos}>
       <Line points={[[0,0,0], [radius * 1.3, 0, 0]]} color="#ef4444" lineWidth={1} transparent opacity={0.2} />
       <Line points={[[0,0,0], [0, radius * 1.3, 0]]} color="#22c55e" lineWidth={1} transparent opacity={0.2} />
       <Line points={[[0,0,0], [0, 0, radius * 1.3]]} color="#3b82f6" lineWidth={1} transparent opacity={0.2} />
 
-      {renderPlaneArc(xy, "#ef4444")}
-      {renderPlaneArc(yz, "#22c55e")}
-      {renderPlaneArc(zx, "#3b82f6")}
+      {renderArc(xAxis, "#ef4444", 1.15)}
+      {renderArc(yAxis, "#22c55e", 1.25)}
+      {renderArc(zAxis, "#3b82f6", 1.35)}
     </group>
   );
 }
-
 /**
  * Poutre 3D (Beam) - VERSION CYLINDRE
  * @param {Array} start - [x, y, z]
@@ -142,7 +147,7 @@ export function Beam3D({ start, end, diameter = 0.2, isSelected, onClick }) {
  * @param {Array} direction - [x, y, z] (vecteur normalisé ou non)
  * @param {number} value - Valeur en Newtons
  */
-export function Force3D({ position, direction = [0, -1, 0], angles, value, isSelected, onClick }) {
+export function Force3D({ position, direction = [0, -1, 0], value, isSelected, onClick }) {
   const totalLen = 1.0; 
   const coneHeight = 0.25; 
   const cylinderRadius = 0.03;  
@@ -150,18 +155,24 @@ export function Force3D({ position, direction = [0, -1, 0], angles, value, isSel
   const cylinderHeight = totalLen - coneHeight; 
   const color = isSelected ? COLORS.BEAM_SELECTED : COLORS.FORCE;
 
+  const dirVec = useMemo(() => new THREE.Vector3(...direction).normalize(), [direction]);
+
   const rotation = useMemo(() => {
-    const dirVec = new THREE.Vector3(...direction).normalize();
     const quaternion = new THREE.Quaternion();
     quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dirVec);
     return new THREE.Euler().setFromQuaternion(quaternion);
-  }, [direction]);
+  }, [dirVec]);
+
+  // Calcul direct de la position de la queue de la force
+  const tailPos = useMemo(() => {
+    return dirVec.clone().multiplyScalar(-totalLen).toArray();
+  }, [dirVec, totalLen]);
 
   return (
     <group position={position} onClick={(e) => { e.stopPropagation(); onClick && onClick(); }}>
       
-      {/* On passe "angles" au lieu de "direction" */}
-      {isSelected && <ForceAngleArcs angles={angles} />}
+      {/* On passe simplement les coordonnées de début (queue) et fin (pointe) au composant graphique */}
+      {isSelected && <ForceAngleArcs startPos={[0, 0, 0]} endPos={tailPos} />}
 
       <group rotation={rotation}>
         <group position={[0, -totalLen, 0]}>

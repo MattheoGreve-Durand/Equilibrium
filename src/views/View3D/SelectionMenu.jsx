@@ -180,64 +180,72 @@ function ForceMenu({ force, onUpdate }) {
     onUpdate({ position: newPos });
   };
 
-  // --- GESTION DES ANGLES EULER INDÉPENDANTS ---
+  // --- CALCUL DES ANGLES PAR RAPPORT AUX COMPOSANTES ÉLÉMENTAIRES (angleTo) ---
+  const dir = new THREE.Vector3(...force.direction).normalize();
   
-  // Si la force vient d'être créée, elle n'a pas encore de champ "angles".
-  // On lui assigne les angles par défaut qui correspondent à une force vers le bas [0, -1, 0] (soit 270° dans le plan XY).
-  const defaultAngles = { x: 0, y: 0, z: 270 };
-  const angles = force.angles || defaultAngles;
+  const xAxis = new THREE.Vector3(1, 0, 0);
+  const yAxis = new THREE.Vector3(0, 1, 0);
+  const zAxis = new THREE.Vector3(0, 0, 1);
 
-  const applyEulerAngle = (axis, val) => {
-    const deg = parseFloat(val);
-    if (isNaN(deg)) return;
+  // THREE.MathUtils.radToDeg convertit les radians en degrés
+  const angleX = THREE.MathUtils.radToDeg(dir.angleTo(xAxis)).toFixed(1);
+  const angleY = THREE.MathUtils.radToDeg(dir.angleTo(yAxis)).toFixed(1);
+  const angleZ = THREE.MathUtils.radToDeg(dir.angleTo(zAxis)).toFixed(1);
+
+  // Fonction universelle pour appliquer un nouvel angle par rapport à un axe donné
+  const applyAngle = (axisVec, val) => {
+    const newDeg = parseFloat(val);
+    if (isNaN(newDeg)) return;
+
+    // angleTo() renvoie toujours un angle entre 0 et 180°
+    const clampedDeg = Math.max(0, Math.min(180, newDeg));
+    const newRad = THREE.MathUtils.degToRad(clampedDeg);
     
-    // 1. On met à jour UNIQUEMENT l'angle modifié (les autres restent identiques)
-    const newAngles = { ...angles, [axis]: deg };
+    const currentRad = dir.angleTo(axisVec);
+    const delta = newRad - currentRad;
+
+    // Calcul de l'axe de rotation perpendiculaire au vecteur et à l'axe ciblé
+    let rotAxis = new THREE.Vector3().crossVectors(axisVec, dir);
     
-    // 2. On reconstruit le vecteur direction 3D pour l'affichage des flèches et des arcs
-    // On part du vecteur X (1, 0, 0)
-    const euler = new THREE.Euler(
-      newAngles.x * Math.PI / 180, // Tourne dans le plan YZ
-      newAngles.y * Math.PI / 180, // Tourne dans le plan ZX
-      newAngles.z * Math.PI / 180, // Tourne dans le plan XY
-      'ZYX' // Ordre d'application mathématique
-    );
-    
-    const dir = new THREE.Vector3(1, 0, 0).applyEuler(euler).normalize();
-    console.log(angles);
-    // 3. On sauvegarde le vecteur pour la 3D, ET les angles pour que le menu reste figé sur nos choix
-    onUpdate({ 
-      direction: [dir.x, dir.y, dir.z],
-      angles: newAngles 
-    });
+    // Si la force est parfaitement alignée avec l'axe (cross produit = 0), on prend un axe arbitraire
+    if (rotAxis.lengthSq() < 1e-5) {
+      if (axisVec.x === 1) rotAxis.set(0, 1, 0);
+      else if (axisVec.y === 1) rotAxis.set(0, 0, 1);
+      else rotAxis.set(1, 0, 0);
+    } else {
+      rotAxis.normalize();
+    }
+
+    // On pivote le vecteur direction
+    const newDir = dir.clone().applyAxisAngle(rotAxis, delta).normalize();
+
+    // Nettoyage des erreurs de virgule flottante pour garder un vecteur propre
+    if (Math.abs(newDir.x) < 1e-7) newDir.x = 0;
+    if (Math.abs(newDir.y) < 1e-7) newDir.y = 0;
+    if (Math.abs(newDir.z) < 1e-7) newDir.z = 0;
+
+    onUpdate({ direction: newDir.toArray() });
   };
 
   return (
     <div className="selection-menu-grid">
       <label className="selection-menu-label">Valeur (N): <ValidatedInput value={force.value} onCommit={(v) => onUpdate({ value: parseFloat(v) })} className="selection-menu-input" /></label>
       
-      {/* SECTION POSITION */}
       <div className="menu-section-title">Position</div>
       <div className='selection-menu-validate-input-div'><label>X: <ValidatedInput value={force.position[0]} onCommit={(v) => updatePos(0, v)} className="selection-menu-input" /></label></div>
       <div className='selection-menu-validate-input-div'><label>Y: <ValidatedInput value={force.position[1]} onCommit={(v) => updatePos(1, v)} className="selection-menu-input" /></label></div>
       <div className='selection-menu-validate-input-div'><label>Z: <ValidatedInput value={force.position[2]} onCommit={(v) => updatePos(2, v)} className="selection-menu-input" /></label></div>
 
-      {/* SECTION ORIENTATION (Indépendante) */}
-      <div className="menu-section-title" style={{ marginTop: 10 }}>Orientation Indépendante (°)</div>
+      <div className="menu-section-title" style={{ marginTop: 10 }}>Angles (0-180°)</div>
       
-      {/* L'angle Z tourne autour de l'axe Z (donc dans le plan XY) */}
       <div className='selection-menu-validate-input-div'>
-        <label>Angle Plan XY : <ValidatedInput value={angles.z} onCommit={(v) => applyEulerAngle('z', v)} className="selection-menu-input" /></label>
+        <label>Angle / Axe X : <ValidatedInput value={angleX} onCommit={(v) => applyAngle(xAxis, v)} min="0" max="180" className="selection-menu-input" /></label>
       </div>
-      
-      {/* L'angle X tourne autour de l'axe X (donc dans le plan YZ) */}
       <div className='selection-menu-validate-input-div'>
-        <label>Angle Plan YZ : <ValidatedInput value={angles.x} onCommit={(v) => applyEulerAngle('x', v)} className="selection-menu-input" /></label>
+        <label>Angle / Axe Y : <ValidatedInput value={angleY} onCommit={(v) => applyAngle(yAxis, v)} min="0" max="180" className="selection-menu-input" /></label>
       </div>
-      
-      {/* L'angle Y tourne autour de l'axe Y (donc dans le plan ZX) */}
       <div className='selection-menu-validate-input-div'>
-        <label>Angle Plan ZX : <ValidatedInput value={angles.y} onCommit={(v) => applyEulerAngle('y', v)} className="selection-menu-input" /></label>
+        <label>Angle / Axe Z : <ValidatedInput value={angleZ} onCommit={(v) => applyAngle(zAxis, v)} min="0" max="180" className="selection-menu-input" /></label>
       </div>
     </div>
   );
