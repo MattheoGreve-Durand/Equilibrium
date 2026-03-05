@@ -159,7 +159,7 @@ export function Beam({ b, index, isSelected, onSelect, isToolActive }) {
  * @param {Object} l - Objet contenant {id, x1, y1, x2, y2, value}
  * @param {number} index - Index de la poutre pour la numérotation
  */
-export function DistributedLoad({ l, index, isSelected, onSelect, isToolActive }) {
+export function DistributedLoad({ l, index, isSelected, onSelect, isToolActive, isTriangle }) {
   const height = 40;
   const spacing = 20;
   const isNegative = l.value < 0; 

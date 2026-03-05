@@ -286,3 +286,22 @@ function SupportMenu({ support, onUpdate }) {
     </div>
   );
 }
+
+export function MultiSelectionMenu({ count, onDelete, onClose }) {
+  return (
+    <div className="selection-menu-container">
+      <div className="selection-menu-header">
+        <strong>Sélection multiple</strong>
+        <button onClick={onClose} className="selection-menu-close-btn">X</button>
+      </div>
+      <div className="selection-menu-content" style={{ padding: '15px 10px', textAlign: 'center' }}>
+        {count} éléments sélectionnés.
+      </div>
+      <div className="selection-menu-footer">
+        <button onClick={onDelete} className="selection-menu-delete-btn" style={{ width: '100%' }}>
+          Supprimer la sélection
+        </button>
+      </div>
+    </div>
+  );
+}

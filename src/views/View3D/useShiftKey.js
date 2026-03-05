@@ -55,3 +55,27 @@ export function useMouseClick() {
 
     return isMouseButtonPressed;
 }
+
+export function useCtrlKey() {
+  const [isCtrlPressed, setIsCtrlPressed] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      console.log("CRTL PRESSED");
+      if (e.key === 'Control' || e.key === 'Meta') setIsCtrlPressed(true);
+    };
+    const handleKeyUp = (e) => {
+      if (e.key === 'Control' || e.key === 'Meta') setIsCtrlPressed(false);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
+
+  return isCtrlPressed;
+}

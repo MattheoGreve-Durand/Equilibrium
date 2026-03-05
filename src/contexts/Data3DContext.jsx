@@ -7,15 +7,11 @@ export function Data3DProvider({ children }) {
   const [activeTool, setActiveTool] = useState(null);
 
   // --- DONNÉES 3D ---
-  //{id: 1, start: [0,0,0], end: [1,0,0], diameter: 0.2}
   const [beams, setBeams] = useState([]);
-  //{id:1, position: [0,0,0], direction: [0,-1,0], value: 100}
   const [forces, setForces] = useState([]);
   const [moments, setMoments] = useState([]);
   const [loads, setLoads] = useState([]);
-  
-  // Supports (On peut les grouper ou les séparer, ici groupés pour simplifier l'exemple 3D)
-  const [supports, setSupports] = useState([]);
+    const [supports, setSupports] = useState([]);
 
   // --- ACTIONS GÉNÉRIQUES ---
   const addItem = (setFunc, item) => setFunc(prev => [...prev, { id: Date.now(), ...item }]);

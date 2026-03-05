@@ -30,10 +30,6 @@ function ForceAngleArcs({ startPos, endPos }) {
 
   const renderArc = (axisVec, color, labelOffset = 1.1) => {
     const angle = v.angleTo(axisVec);
-    
-    
-
-
     // THREE.js gère la rotation parfaitement d'un vecteur à un autre sans calcul manuel
     const qBase = new THREE.Quaternion().setFromUnitVectors(v, axisVec);
     
@@ -84,6 +80,8 @@ function ForceAngleArcs({ startPos, endPos }) {
  * @param {Array} start - [x, y, z]
  * @param {Array} end - [x, y, z]
  * @param {number} diameter - Diamètre de la section
+ * @param {boolean} isSelectd - graphical indicator of being selected
+ * @param {function} onClick - onClick
  */
 export function Beam3D({ start, end, diameter = 0.2, isSelected, onClick }) {
   const { position, rotation, length, direction } = useMemo(() => {
